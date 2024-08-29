@@ -18,6 +18,9 @@ class FlappyBird:
         self.bird = None
         self.pipes = None
 
+        # Init distance 
+        self.dist = PIPE_X0
+
         # Stats param
         self.env_reset = -1
         self.score = 0
@@ -38,7 +41,9 @@ class FlappyBird:
             del self.bird, self.pipes
 
         self.bird = Bird(r=10, g=300)
-        self.pipes = [Obstacle(PIPE_X0 + 2*ORIZONTAL_GAP*i, t0) for i in range(PIPE_ON_SCREEN)]      
+        self.pipes = [Obstacle(PIPE_X0 + 2*ORIZONTAL_GAP*i, t0) for i in range(PIPE_ON_SCREEN)] 
+
+        self.dist = PIPE_X0     
 
         return self.get_state()
         
@@ -71,20 +76,15 @@ class FlappyBird:
             if pipe.x < -pipe.width:
                 pipe.reset()
 
-        # Evaluate orizontal distance
-        dist = np.array([self.pipes[j].x for j in range(PIPE_ON_SCREEN)]) - np.array([self.bird.x for _ in range(PIPE_ON_SCREEN)])
+        # Evaluate the min distance from pipe and update score
         
-        # Check if bird passed a pipe
-        for i in range(len(dist)):
-            if dist[i] <= -self.pipes[i].width:     # Enter if all pipe passed
+        self.dist, self.score, index = distance_score(self.bird, self.pipes, self.score)
 
-                if self.pipes[i].score_flag == True:        # Flag to count only once the score
-                    
-                    reward += SCORE_REW
-                    self.score +=1
-                    self.pipes[i].score_flag = False 
+        # Reward the agent if the bird is headin to a pipe
+        if entering_pipe(self.bird, self.pipes, index):
+            reward += HEADING_TO_PIPE
 
-
+        # Reward the agent if the bird is between pipe
         for pipe in self.pipes:
             if pipe.x < self.bird.x < pipe.x + pipe.width:
                 reward += BETWEEN_PIPE
@@ -121,13 +121,7 @@ class FlappyBird:
         vy = self.bird.vy/MAX_VEL
 
         # Distance to the next pipe
-        dist = np.array([self.pipes[j].x for j in range(PIPE_ON_SCREEN)]) - np.array([self.bird.x for _ in range(PIPE_ON_SCREEN)])
-    
-        for i in range(len(dist)):
-            if dist[i] <= 0:
-                dist[i] = 1000
-        
-        d_out = min(dist)/WIDTH
+        d_out = self.dist/WIDTH
 
         # Normalized pipe velocity
         vp_x = self.pipes[0].vx/MAX_PIPE_SPEED

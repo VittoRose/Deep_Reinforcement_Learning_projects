@@ -62,7 +62,6 @@ try:
         # Check for termination condition
         running, _ = screen.user_interaction()
 
-
         # Collect some experience in the buffer with exploration
         train_collector.collect(n_exp = 2*BATCH_SIZE)
         
@@ -112,7 +111,7 @@ try:
 except KeyboardInterrupt:
     running = False
 
-RL_agent.save()
+#RL_agent.save()
 
 if logger is not None:
     logger.flush()

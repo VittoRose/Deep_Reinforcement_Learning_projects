@@ -14,10 +14,17 @@ OFFSET = ORIZONTAL_GAP + 30
 MAX_VEL = 1200
 MAX_PIPE_SPEED = 700
 
+# Entring condition
+X_ENTR = 60
+Y_ENTR = 30
+
+M = Y_ENTR//X_ENTR          # Slope of entering line
+
 # Rewards and penalties 
 COLLISION_REW = -20
 SCORE_REW = 0
 BETWEEN_PIPE = 5
+HEADING_TO_PIPE = 1
 
 # Hyperparameters
 EPS = 0.1

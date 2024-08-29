@@ -24,9 +24,7 @@ pipes = [Obstacle(PIPE_X0 + 2*ORIZONTAL_GAP*i, t0) for i in range(PIPE_ON_SCREEN
 
 while running :
 
-
     running, jump = screen.user_interaction()
-
 
     bird.update(jump)
 
@@ -40,18 +38,10 @@ while running :
         print("Collison -> Game Over")
         break
 
-    dist = np.array([pipes[j].x for j in range(PIPE_ON_SCREEN)]) - np.array([bird.x for _ in range(PIPE_ON_SCREEN)])
-    
-    for i in range(len(dist)):
+    # Increase score
+    _, nearest_pipe, score = distance_score(bird, pipes, score)
 
-        if dist[i] <= -pipes[i].width:
-            dist[i] = 1000
-            if pipes[i].score_flag == True:
-                score += 1
-                print(f"Score: {score}")
-                pipes[i].score_flag = False        
 
-        elif dist[i] <= 0:
-            dist[i] = 1000
+    entering_pipe(bird,pipes, nearest_pipe) 
 
-    screen.draw(bird, pipes, 0, score)
+    screen.draw(bird, pipes, 0, score, 0)
