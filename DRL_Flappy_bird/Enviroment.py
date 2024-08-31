@@ -11,7 +11,7 @@ class FlappyBird:
     def __init__(self):
 
         # Network size
-        self.state_size = 4
+        self.state_size = 6
         self.action_size = 2
 
         # Init bird and obstacle
@@ -24,6 +24,9 @@ class FlappyBird:
         # Stats param
         self.env_reset = -1
         self.score = 0
+
+        # Next pipe index
+        self.index = 0
 
         self.reset()
 
@@ -77,10 +80,10 @@ class FlappyBird:
                 pipe.reset()
 
         # Evaluate the min distance from pipe and update score
-        self.dist, index, self.score = distance_score(self.bird, self.pipes, self.score)
+        self.dist, self.index, self.score = distance_score(self.bird, self.pipes, self.score)
 
         # Reward the agent if the bird is headin to a pipe
-        if entering_pipe(self.bird, self.pipes, index):
+        if entering_pipe(self.bird, self.pipes, self.index):
             reward += HEADING_TO_PIPE
 
         # Reward the agent if the bird is between pipe
@@ -94,12 +97,10 @@ class FlappyBird:
             reward = COLLISION_REW
             self.env_reset += 1
             self.reset()
-        #else:
-         #   reward += ALIVE_REW
 
         return self.get_state(), reward, terminated, truncated
     
-    def get_disp_data(self) -> tuple[Bird, Obstacle ]:
+    def get_disp_data(self) -> tuple[Bird, Obstacle]:
         """
         Return the necessary data to draw the enviroment
         """
@@ -120,13 +121,17 @@ class FlappyBird:
         # Distance to the next pipe
         d_out = self.dist/WIDTH
 
+        # Gap coordinate
+        top_gap = self.pipes[self.index].h1/HEIGHT
+        bot_gap = self.pipes[self.index].y2/HEIGHT
+
         # Normalized pipe velocity
-        vp_x = self.pipes[0].vx/MAX_PIPE_SPEED
+        vp_x = -self.pipes[0].vx/MAX_PIPE_SPEED
 
         # Pipe width
         w = self.pipes[0].width/WIDTH
 
-        return torch.as_tensor([y, vy, d_out, vp_x], dtype=torch.float32)
+        return torch.as_tensor([y, vy, d_out, top_gap, bot_gap, vp_x], dtype=torch.float32)
     
 
 class EnvWorker:
