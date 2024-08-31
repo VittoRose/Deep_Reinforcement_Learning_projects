@@ -251,7 +251,6 @@ def distance_score(bird: Bird, pipes: list[Obstacle], score) -> int:
             dist[i] = 1000
             if pipes[i].score_flag == True:
                 score += 1
-                print(f"Score: {score}")
                 pipes[i].score_flag = False        
 
         elif dist[i] <= 0:

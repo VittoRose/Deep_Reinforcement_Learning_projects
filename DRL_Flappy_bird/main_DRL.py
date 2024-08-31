@@ -9,8 +9,8 @@ import Data_struct
 import random
 
 # Create a writer to save data during training
-#logger = SummaryWriter("logs/Buffer100k_Batch50")
-logger = None
+logger = SummaryWriter("logs/Buffer100k_Batch100_new_rule")
+#logger = None
 
 # Get a random seed
 random.seed(time())

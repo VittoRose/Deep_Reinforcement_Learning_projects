@@ -44,4 +44,4 @@ while running :
 
     entering_pipe(bird,pipes, nearest_pipe) 
 
-    screen.draw(bird, pipes, 0, score, 0)
+    screen.draw(bird, pipes, 0, score, 0) 

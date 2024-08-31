@@ -77,8 +77,7 @@ class FlappyBird:
                 pipe.reset()
 
         # Evaluate the min distance from pipe and update score
-        
-        self.dist, self.score, index = distance_score(self.bird, self.pipes, self.score)
+        self.dist, index, self.score = distance_score(self.bird, self.pipes, self.score)
 
         # Reward the agent if the bird is headin to a pipe
         if entering_pipe(self.bird, self.pipes, index):
@@ -105,9 +104,7 @@ class FlappyBird:
         Return the necessary data to draw the enviroment
         """
 
-        return self.bird, self.pipes
-
-        
+        return self.bird, self.pipes        
     
     def get_state(self) -> torch.tensor:
         """

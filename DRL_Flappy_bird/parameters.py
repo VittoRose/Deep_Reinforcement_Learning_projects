@@ -16,7 +16,7 @@ MAX_PIPE_SPEED = 700
 
 # Entring condition
 X_ENTR = 60
-Y_ENTR = 30
+Y_ENTR = 60
 
 M = Y_ENTR//X_ENTR          # Slope of entering line
 
@@ -31,7 +31,7 @@ EPS = 0.1
 LR = 1e-3
 DISCOUNT_FACTOR = 0.9
 
-BATCH_SIZE = 50
+BATCH_SIZE = 100
 BUFFER_SIZE = 100_000
 
 UPDATE_INTERVAL = 100
