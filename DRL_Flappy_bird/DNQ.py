@@ -19,9 +19,9 @@ class Agent(nn.Module):
 
         # Create a NN whit 1 hidden layers 128 neurons
         self.model = nn.Sequential(
-            nn.Linear(np.prod(state_size), 64), nn.ReLU(inplace=True),
-            nn.Linear(64, 64), nn.ReLU(inplace=True),
-            nn.Linear(64, np.prod(action_size)),
+            nn.Linear(np.prod(state_size), 128), nn.ReLU(inplace=True),
+            nn.Linear(128, 128), nn.ReLU(inplace=True),
+            nn.Linear(128, np.prod(action_size)),
         )
 
         # Load preexisting model from parameters
@@ -40,11 +40,11 @@ class Agent(nn.Module):
 
         return self.model(obs)
     
-    def save(self): 
+    def save(self, path:str) -> None: 
         """
         Save model parameters
         """
-        torch.save(self.model.state_dict(),"NN/model_2.pth" )
+        torch.save(self.model.state_dict(),path )
 
     def load_model(self):
         self.model.load_state_dict(torch.load("NN/model_prova.pth"))

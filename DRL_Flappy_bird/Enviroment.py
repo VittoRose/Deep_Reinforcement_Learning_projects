@@ -11,7 +11,7 @@ class FlappyBird:
     def __init__(self):
 
         # Network size
-        self.state_size = 6
+        self.state_size = 4 + 3*PIPE_ON_SCREEN
         self.action_size = 2
 
         # Init bird and obstacle
@@ -121,17 +121,20 @@ class FlappyBird:
         # Distance to the next pipe
         d_out = self.dist/WIDTH
 
-        # Gap coordinate
-        top_gap = self.pipes[self.index].h1/HEIGHT
-        bot_gap = self.pipes[self.index].y2/HEIGHT
+        # Gap coordinate (y)
+        top_gap = tuple(pipe.h1/HEIGHT for pipe in self.pipes)
+        bot_gap = tuple(pipe.y1/HEIGHT for pipe in self.pipes)
+
+        # End gap (x)
+        end_gap = tuple((pipe.x + pipe.width)/WIDTH for pipe in self.pipes)
 
         # Normalized pipe velocity
         vp_x = -self.pipes[0].vx/MAX_PIPE_SPEED
 
-        # Pipe width
-        w = self.pipes[0].width/WIDTH
+        # State tuple -> dim(state) = 4 + 3*PIPE_ON_SCREEN
+        state = (y, vy, d_out, vp_x) + top_gap + bot_gap + end_gap
 
-        return torch.as_tensor([y, vy, d_out, top_gap, bot_gap, vp_x], dtype=torch.float32)
+        return torch.as_tensor(state, dtype=torch.float32)
     
 
 class EnvWorker:

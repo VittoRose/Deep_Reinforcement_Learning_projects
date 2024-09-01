@@ -9,7 +9,7 @@ import Data_struct
 import random
 
 # Create a writer to save data during training
-logger = SummaryWriter("logs/Buffer100k_Batch100_new_rule")
+logger = SummaryWriter("logs/Buffer100k_Batch128_new_state")
 #logger = None
 
 # Get a random seed
@@ -111,10 +111,11 @@ try:
 except KeyboardInterrupt:
     running = False
 
-#RL_agent.save()
-
 if logger is not None:
     logger.flush()
     logger.close()
+
+RL_agent.save("NN/Buffer100k_Batch128_new_state.pth")
+
 
 print("Script ended successfully")
