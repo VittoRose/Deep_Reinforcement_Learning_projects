@@ -1,0 +1,22 @@
+from numpy import pi
+
+# Training param
+EPS = 0.1
+LR = 1e-3
+DISCOUNT_FACTOR = 0.9
+UPDATE_INTERVAL = 100
+
+# Buffer param
+BATCH_SIZE = 50
+BUFFER_SIZE = 10_000
+
+
+# Boundaries
+MAX_ANGLE = pi/2
+MAX_OMEGA = 2
+SUCCESS_STEP = 500
+SMALL_ANGLE = 0.05
+
+# Reward
+MAX_ANGLE_EXCEEDED = -20
+SMALL_ANGLE_REWARD = 1
