@@ -181,7 +181,8 @@ class Collector:
                 q_val = self.policy.action(self.state)
 
             # Select the max activation for each q_value
-            actions = np.asarray(torch.argmax(q_val, dim=1))
+            
+            actions = torch.argmax(q_val, dim=1)        
 
             # Select random action for exploration if needed
             if self.exploration:

@@ -13,12 +13,8 @@ CLIP = 0.2
 GAMMA = 0.98
 LAMBDA = 0.95
 
-DISCOUNT_FACTOR = 0.9
-UPDATE_INTERVAL = 100
-
 # Buffer param
-BUFFER_SIZE = 128
-
+BUFFER_SIZE = 128       # it's also the number of timestep explored for each iteration
 
 # Boundaries
 MAX_ANGLE = pi/2

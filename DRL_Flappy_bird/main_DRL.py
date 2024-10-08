@@ -9,8 +9,7 @@ import Data_struct
 import random
 
 # Create a writer to save data during training
-#logger = SummaryWriter("logs/Buffer100k_Batch128_new_state")
-logger = None
+logger = SummaryWriter("logs/Buffer100k_Batch128_pc_lab")
 
 # Get a random seed
 random.seed(time())
@@ -46,18 +45,18 @@ reset, ep_lenght, ep_reward = 0, 0, 0
 # Initial test condition
 state = test_env.reset()
 
-# Save training loop start time
-t0 = time()
-
 # Loop counter variable
 counter = 0
+
+# Save training loop start time
+t0 = time()
 
 # ---------------------------------------------------- #
 #                   Training loop                      #
 # ---------------------------------------------------- #
 
 try:
-    while running:
+    while running and counter <= 500000:
 
         # Check for termination condition
         running, _ = screen.user_interaction()
@@ -72,7 +71,9 @@ try:
         # ------------------ #
 
         # Get q_value from the target network
-        q_test = policy.target(state)
+        state = state.to(RL_agent.device)
+        with torch.no_grad():
+            q_test = policy.target(state)
 
         # Select the action
         action = torch.argmax(q_test)
@@ -84,7 +85,7 @@ try:
         ep_reward += reward
         ep_lenght += 1
 
-        # Reset enviroment if the 
+        # Reset enviroment
         if terminated or truncated:
             state = test_env.reset()
 
@@ -115,7 +116,7 @@ if logger is not None:
     logger.flush()
     logger.close()
 
-RL_agent.save("NN/Buffer100k_Batch128_new_state.pth")
+RL_agent.save("NN/Buffer100k_Batch128_pc_lab.pth")
 
 
 print("Script ended successfully")

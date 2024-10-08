@@ -8,7 +8,7 @@ class Agent(nn.Module):
     Neural network that represent the agent
     """
 
-    def __init__ (self, state_size: int = 4, action_size: int = 5, load: bool = False):
+    def __init__ (self, state_size: int = 4, action_size: int = 5, load: str = None):
         """ 
         create a NN (RL agent) with state_size neuron as an input and action_size neurons as output
         """
@@ -17,6 +17,10 @@ class Agent(nn.Module):
         self.state_size = state_size
         self.action_size = action_size
 
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cpu"
+        print("Running on ", self.device)
+
         # Create a NN whit 1 hidden layers 128 neurons
         self.model = nn.Sequential(
             nn.Linear(np.prod(state_size), 128), nn.ReLU(inplace=True),
@@ -24,9 +28,11 @@ class Agent(nn.Module):
             nn.Linear(128, np.prod(action_size)),
         )
 
+        self.model.to(device=self.device)
+
         # Load preexisting model from parameters
-        if load:
-            self.load_model()
+        if load is not None:
+            self.load_model(load)
 
             print("Using old model")
 
@@ -36,7 +42,7 @@ class Agent(nn.Module):
         Forward method, observation as an input and Q_value as an output
         """
         if not isinstance(obs, torch.Tensor):
-            obs = torch.tensor(obs, dtype = torch.float32)
+            obs = torch.tensor(obs, dtype = torch.float32, device=self.device)
 
         return self.model(obs)
     
@@ -44,10 +50,10 @@ class Agent(nn.Module):
         """
         Save model parameters
         """
-        torch.save(self.model.state_dict(),path )
+        torch.save(self.model.state_dict(), path)
 
-    def load_model(self):
-        self.model.load_state_dict(torch.load("NN/model_prova.pth"))
+    def load_model(self, path:str):
+        self.model.load_state_dict(torch.load(path))
     
 class Policy():
 
@@ -95,7 +101,7 @@ class Policy():
         # Collect a sample from the buffer
         batch = self.buffer.sample()
 
-        q_values = self.action(batch["state"])
+        q_values = self.action(batch["state"]).cpu()
 
         actions = torch.as_tensor(batch["action"], dtype=torch.int64).unsqueeze(-1)
         rewards = torch.as_tensor(batch["reward"], dtype=torch.float32).unsqueeze(-1)
@@ -104,7 +110,7 @@ class Policy():
         # Get the q_values of the actions selected by the agent
         act_q_values = torch.gather(input=q_values, dim=1, index=actions)
 
-        target_q_values = self.target(batch["next_state"])
+        target_q_values = self.target(batch["next_state"]).cpu()
 
         max_target_q_values = torch.max(target_q_values, dim=1)[0].unsqueeze(-1)
 

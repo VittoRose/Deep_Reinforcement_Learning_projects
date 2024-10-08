@@ -26,8 +26,8 @@ critic = PPO.Network(state_size, None)
 networks = (actor, critic)
 
 # Optimizer for the two network
-actor_optimizer = torch.optim.Adam(actor.parameters(), lr = LR_ACTOR)
-critic_optimizer = torch.optim.Adam(critic.parameters(), lr = LR_CRITIC)
+actor_optimizer = torch.optim.Adam(actor.parameters(), lr=LR_ACTOR)
+critic_optimizer = torch.optim.Adam(critic.parameters(), lr=LR_CRITIC)
 
 # Pack optimizer
 optimizers = (actor_optimizer, critic_optimizer)

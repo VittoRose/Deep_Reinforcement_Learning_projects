@@ -71,8 +71,8 @@ class PendolumEnv:
         alpha = (-self.g / self.l) * np.sin(self.theta) + tau / (self.m * self.l**2)
         
         # Euler to update state variable
-        self.theta = self.theta + self.omega * self.dt
         self.omega = self.omega + alpha * self.dt
+        self.theta = self.theta + self.omega * self.dt
 
         # Increase episode length
         self.episode_len += 1

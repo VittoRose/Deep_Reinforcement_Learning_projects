@@ -1,5 +1,4 @@
 from parameters import *
-import numpy as np
 import torch
 from copy import deepcopy
 
