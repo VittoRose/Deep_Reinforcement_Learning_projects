@@ -79,8 +79,6 @@ class DictBuffer():
 
                 # Clear enviroment reward and length
                 self.rew[j], self.ep_len[j] = 0,0
-
-
             
         # Update index, if capacity exeeded clear old transition
         self.i = (self.i + self.n_env) % self.capacity

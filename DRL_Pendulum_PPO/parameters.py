@@ -14,7 +14,7 @@ GAMMA = 0.98
 LAMBDA = 0.95
 
 # Buffer param
-BUFFER_SIZE = 128       # it's also the number of timestep explored for each iteration
+BUFFER_SIZE = 64       # it's also the number of timestep explored for each iteration
 
 # Boundaries
 MAX_ANGLE = pi/2

@@ -67,9 +67,6 @@ class Algorithm():
         # Tensorboard logger
         self.writer = writer
 
-        # Loss algorithm 
-        self.loss_fn = torch.nn.MSELoss(reduction="none")
-
         # Discount factor
         self.gamma = discount_factor
         
@@ -81,9 +78,6 @@ class Algorithm():
 
         # Lambda param
         self.lam = attenuation
-
-        # Counter for updating target network
-        self.step = 0
 
     def ppo_loss(self, advantages) -> torch.tensor:
         """
@@ -106,7 +100,8 @@ class Algorithm():
 
             losses[:,t] = torch.min(clip, no_clip)
             
-        loss = -losses.mean()
+        # Mean for each enviroment and timestep    
+        loss = losses.mean()
 
         return loss
 

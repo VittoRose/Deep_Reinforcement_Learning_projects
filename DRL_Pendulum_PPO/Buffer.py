@@ -13,8 +13,8 @@ class Buffer():
         self.n_env = n_envs
 
         # List to store cumulative reward and episode length
-        self.rew = [0 for _ in range(self.n_env)]
-        self.ep_len = [0 for _ in range(self.n_env)]
+        self.rew = torch.zeros(self.n_env)
+        self.ep_len = torch.zeros(self.n_env)
 
         # Buffer dimension
         self.capacity = capacity
@@ -57,8 +57,8 @@ class Buffer():
         """
 
         # List that contain cumulative rewards and episode lenght for each enviroment
-        #rewards = []
-        #ep_length = []
+        rewards = []
+        ep_length = []
 
         # Store data 
         self.state.append(state)
@@ -66,20 +66,24 @@ class Buffer():
         self.dones[:,timestamp] = torch.as_tensor(terminated)
         self.trunc[:,timestamp] = torch.as_tensor(truncated)
         self.values[:,timestamp] = value.squeeze()
-
-        """
+        
+        # Store cumulative reward
+        self.rew += self.rewards[:, timestamp]
+        self.ep_len += 1
+        
         # If episode terminate store the value
-        if terminated[j]:
+        for i in range(0,self.n_env):
+            if (self.dones[i,timestamp] == 1) or (self.trunc[i,timestamp] == 1):
 
-            # Output variable lists of reward and episode length
-            rewards.append(self.rew[j])
-            ep_length.append(self.ep_len[j])
+                # Output variable lists of reward and episode length
+                rewards.append(self.rew[i])
+                ep_length.append(self.ep_len[i])
 
-            # Clear enviroment reward and length
-            self.rew[j], self.ep_len[j] = 0,0
-        """        
+                # Clear enviroment reward and length
+                self.rew[i], self.ep_len[i] = 0,0
 
-        #return rewards, ep_length
+        return rewards, ep_length
+        
 
     def get_transition(self) -> tuple[torch.tensor, torch.tensor, torch.tensor]:
         """
@@ -117,16 +121,13 @@ class Buffer():
         return self.prob
     
     def store_network(self, network) -> None:
-        """
-        Copy network parameters from input network to buffer
-        """
-
+        # Copy network parameters from input network to buffer
+        
         self.old_NN.load_state_dict(network.state_dict())
 
     def old_network(self, state, actions, timestamp) -> None:
-        """
-        Get a state as an input, evaluate and store the probability function with the old network
-        """
+        # Get a state as an input, evaluate and store the probability function with the old network
+        
         q_val = self.old_NN(state)
 
         action_probs = torch.softmax(q_val, dim=-1)

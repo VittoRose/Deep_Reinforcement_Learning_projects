@@ -70,19 +70,19 @@ class Collector:
             value = self.trainer.critic(self.state)
 
             # Add data in replay buffer
-            self.buffer.store_transition(self.state, reward, terminated, truncated, value, count_exp)
+            rewards, ep_length = self.buffer.store_transition(self.state, reward, terminated, truncated, value, count_exp)
 
             # Manage truncated and terminated enviroment
             if np.any(truncated | terminated):
                 to_reset = np.where(truncated | terminated)[0]
-                """
+                
                 # Add to log each enviroment stats
                 if self.writer is not None:
                     for index, i in enumerate(rewards):
                         self.writer.add_scalar("Train/Reward per episode", i, self.reset_num + index)
                     for index,j in enumerate(ep_length):
                         self.writer.add_scalar("Train/Episode length", j, self.reset_num + index)
-                """
+                
 
                 # Count the number of enviroment reset
                 self.reset_num += len(to_reset)

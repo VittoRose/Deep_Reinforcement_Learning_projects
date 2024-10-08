@@ -10,13 +10,12 @@ from time import time
 
 # Enviroment param
 n_env = 5
-epidosde = 8
 state_size = 4
 action_size = 5
 
 # Create a writer to save data during training
-# logger = SummaryWriter(f"logs/Buffer10k_Batch50")
-logger = None
+logger = SummaryWriter(f"logs/Prova0_plot_train_env")
+#logger = None
 
 # Create Neural network
 actor = PPO.Network(state_size, action_size)
@@ -36,13 +35,13 @@ optimizers = (actor_optimizer, critic_optimizer)
 buffer = Buffer.Buffer(actor, n_envs=n_env)
 
 # Create a policy
-trainer = PPO.Algorithm(networks, optimizers, buffer, GAMMA, CLIP, LAMBDA, n_env, logger)
+trainer = PPO.Algorithm(networks, optimizers, buffer, GAMMA, CLIP, LAMBDA, n_env, None)
 
 # Pool of train events
 train_env = Enviroment.VectorEnv([Enviroment.PendolumEnv() for _ in range(n_env)])
 
 # Collector for training enviroment
-train_collector = Collector.Collector(trainer, train_env, buffer, action_size, logger)
+train_collector = Collector.Collector(trainer, train_env, buffer, action_size, None)
 
 # Grapichs management
 gui = Graphics.GUI()
@@ -59,6 +58,7 @@ reset, i, ep_reward = 0, 0, 0
 state = test_env.reset()
 ang = test_env.ang
 
+t0 = time()
 
 # ---------------------------------------------------- #
 #                   Training loop                      #
@@ -115,7 +115,11 @@ try:
         i+=1
 
         if i % 1000 == 0:
-            print(f"Number of learning steps: {i}")
+            print(f"Number of learning steps: {i}, time enlapsed {time()-t0}")
+            t0 = time()
+
+        if i > 4000: 
+            break
 
 except KeyboardInterrupt:
     running = False
