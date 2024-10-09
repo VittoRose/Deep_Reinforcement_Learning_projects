@@ -15,7 +15,7 @@ class PendolumEnv:
         self.dt = dt
 
         self.env_reset = 0
-        self.obs_size = 4
+        self.state_size = 4
         self.action_size = 5
 
         self.reset()

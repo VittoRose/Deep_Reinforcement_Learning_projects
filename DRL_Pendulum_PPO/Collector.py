@@ -45,10 +45,7 @@ class Collector:
         for count_exp in range(0,n_exp):
             
             # Get activation from previous state
-            q_val = self.trainer.actor(self.state)
-
-            # Map q_val in probability value
-            action_probs = torch.softmax(q_val, dim=-1)
+            action_probs = self.trainer.actor(self.state)
 
             # Create a probability distribution from the NN output
             distribution = torch.distributions.Categorical(action_probs)
@@ -77,13 +74,11 @@ class Collector:
                 to_reset = np.where(truncated | terminated)[0]
                 
                 # Add to log each enviroment stats
-                if self.writer is not None:
-                    for index, i in enumerate(rewards):
-                        self.writer.add_scalar("Train/Reward per episode", i, self.reset_num + index)
-                    for index,j in enumerate(ep_length):
-                        self.writer.add_scalar("Train/Episode length", j, self.reset_num + index)
+                if self.writer is not None and len(rewards) != 0:
+                    for i in range(len(rewards)):
+                        self.writer.add_scalar("Train/Reward per episode", rewards[i], self.reset_num+i)
+                        self.writer.add_scalar("Train/Episode length", ep_length[i], self.reset_num+i)
                 
-
                 # Count the number of enviroment reset
                 self.reset_num += len(to_reset)
 

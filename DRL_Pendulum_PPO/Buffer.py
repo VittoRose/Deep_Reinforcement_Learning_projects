@@ -27,7 +27,7 @@ class Buffer():
     def reset(self):
         """
         Create empty data structures to store data
-        All data structures are 
+        All data structures are (n_env rows) x (buffer.capacity cols)
         """
 
         # State buffer
@@ -68,8 +68,8 @@ class Buffer():
         self.values[:,timestamp] = value.squeeze()
         
         # Store cumulative reward
-        self.rew += self.rewards[:, timestamp]
-        self.ep_len += 1
+        self.rew = self.rew + self.rewards[:, timestamp]
+        self.ep_len = self.ep_len + 1
         
         # If episode terminate store the value
         for i in range(0,self.n_env):

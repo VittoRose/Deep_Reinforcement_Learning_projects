@@ -3,48 +3,6 @@ from torch import nn
 import numpy as np
 from copy import deepcopy
 from parameters import *
-
-class Network(nn.Module):
-    """
-    Neural network used as function approximator:
-    Actor   ->  Q(s,a)
-    Critic  ->  V(s)
-    """
-
-    def __init__ (self, state_size:int = 4 , action_size:int = 5):
-        """ 
-        create a NN (Actor) with state_size neuron as an input and action_size neurons as output
-        create a NN (Critic) with state_size neuron as an input and 1 neurons as output
-        """
-        super().__init__()
-
-        # Store state and action size
-        self.state_size = state_size
-        self.action_size = action_size
-
-        if action_size is not None:
-            # NN as Actor (2 hidden layer 128 neurons)
-
-            self.model = nn.Sequential(
-                nn.Linear(np.prod(state_size), 128), nn.ReLU(inplace=True),
-                nn.Linear(128, 128), nn.ReLU(inplace=True),
-                nn.Linear(128, np.prod(action_size)),
-            )
-        else:
-            # NN as Critic (128 neurons)
-            self.model = nn.Sequential(
-                nn.Linear(np.prod(state_size), 128), nn.ReLU(inplace=True),
-                nn.Linear(128, np.prod(1)),
-            )    
-
-    def forward(self, obs: torch.tensor) -> torch.tensor: 
-        """ 
-        Forward method, observation as an input and Q_value as an output
-        """
-        if not isinstance(obs, torch.Tensor):
-            obs = torch.tensor(obs, dtype = torch.float32)
-
-        return self.model(obs)
     
 class Algorithm():
 
@@ -87,6 +45,7 @@ class Algorithm():
         prob = self.buffer.prob
         old_prob = self.buffer.old_prob
 
+        """
         rateo = torch.zeros_like(prob)
         losses = torch.zeros_like(prob)
 
@@ -98,9 +57,18 @@ class Algorithm():
             no_clip = rateo[:,t]*advantages[:,t]
             clip = torch.clamp(rateo[:,t], 1-CLIP, 1+CLIP)*advantages[:,t]
 
-            losses[:,t] = torch.min(clip, no_clip)
-            
-        # Mean for each enviroment and timestep    
+            losses[:,t] = -torch.min(clip, no_clip)
+        """
+
+        # Evaluate loss for each enviroment and timestamp
+        rateo = prob/old_prob
+        
+        no_clip = rateo*advantages
+        clip = torch.clamp(rateo, 1-CLIP, 1+CLIP)*advantages
+
+        losses = -torch.min(clip, no_clip)
+
+        # Mean loss across enviroment and timesteps   
         loss = losses.mean()
 
         return loss
@@ -132,15 +100,17 @@ class Algorithm():
             delta = rewards[:, t] + self.gamma * next_value * next_non_terminal - values[:, t]
 
             # GAE Advantage
-            gae = delta + self.gamma * self.lam * next_non_terminal * gae
-            advantages[:, t] = gae
+            with torch.autograd.set_detect_anomaly(True):
+
+                gae = delta + self.gamma * self.lam * next_non_terminal * gae
+                advantages[:, t] = gae
 
             # Target for critic update
             value_target[:,t] = advantages[:,t] + values[:,t]
 
         return advantages, value_target
     
-    def actor_update(self, advantages) -> None:
+    def actor_update(self, advantages, index) -> None:
         """
         Update actor network
         """
@@ -148,12 +118,15 @@ class Algorithm():
         # Loss evaluation
         loss = self.ppo_loss(advantages)
 
+        if self.writer is not None:
+            self.writer.add_scalar("Loss", loss, index)
+
         # Store old network
         self.buffer.store_network(self.actor)
 
         # Backpropagation
-        self.a_optim.zero.grad()
-        loss.backward()
+        self.a_optim.zero_grad()
+        loss.backward() 
         self.a_optim.step()
 
     
