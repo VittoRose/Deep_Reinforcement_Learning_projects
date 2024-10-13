@@ -66,7 +66,7 @@ class Algorithm():
         no_clip = rateo*advantages
         clip = torch.clamp(rateo, 1-CLIP, 1+CLIP)*advantages
 
-        losses = -torch.min(clip, no_clip)
+        losses = -torch.min(no_clip, clip)
 
         # Mean loss across enviroment and timesteps   
         loss = losses.mean()
@@ -100,13 +100,13 @@ class Algorithm():
             delta = rewards[:, t] + self.gamma * next_value * next_non_terminal - values[:, t]
 
             # GAE Advantage
-            with torch.autograd.set_detect_anomaly(True):
+            gae = delta + self.gamma * self.lam * next_non_terminal * gae
 
-                gae = delta + self.gamma * self.lam * next_non_terminal * gae
-                advantages[:, t] = gae
+            advantages[:, t] = gae
 
             # Target for critic update
             value_target[:,t] = advantages[:,t] + values[:,t]
+        
 
         return advantages, value_target
     

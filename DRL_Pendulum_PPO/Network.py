@@ -21,9 +21,11 @@ class Actor(nn.Module):
 
 
         self.model = nn.Sequential(
-            nn.Linear(np.prod(state_size), 128), nn.ReLU(inplace=True),
-            nn.Linear(128, 128), nn.ReLU(inplace=True),
-            nn.Linear(128, np.prod(action_size)),
+            nn.Linear(state_size, 128), 
+            nn.ReLU(inplace=True),
+            nn.Linear(128, 128), 
+            nn.ReLU(inplace=True),
+            nn.Linear(128, action_size),
             nn.Softmax(dim=-1)
             )
 

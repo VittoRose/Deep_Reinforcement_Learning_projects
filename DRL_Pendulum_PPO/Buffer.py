@@ -62,9 +62,9 @@ class Buffer():
 
         # Store data 
         self.state.append(state)
-        self.rewards[:,timestamp] = torch.as_tensor(reward)
-        self.dones[:,timestamp] = torch.as_tensor(terminated)
-        self.trunc[:,timestamp] = torch.as_tensor(truncated)
+        self.rewards[:,timestamp] = torch.tensor(reward)
+        self.dones[:,timestamp] = torch.tensor(terminated)
+        self.trunc[:,timestamp] = torch.tensor(truncated)
         self.values[:,timestamp] = value.squeeze()
         
         # Store cumulative reward
