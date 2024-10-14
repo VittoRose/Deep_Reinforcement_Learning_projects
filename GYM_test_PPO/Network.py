@@ -17,12 +17,21 @@ class Actor(nn.Module):
         # Store state and action size
         self.state_size = state_size
         self.action_size = action_size
-
+        
+        """
         self.model = nn.Sequential(
             nn.Linear(state_size, 128), 
             nn.ReLU(inplace=True),
             nn.Linear(128, 128), 
             nn.ReLU(inplace=True),
+            nn.Linear(128, action_size),
+            nn.Softmax(dim=-1)
+            )
+        """
+        
+        self.model = nn.Sequential(
+            nn.Linear(state_size, 128), 
+            nn.Tanh(),
             nn.Linear(128, action_size),
             nn.Softmax(dim=-1)
             )
@@ -66,8 +75,8 @@ class Critic(nn.Module):
 
         # NN as Critic (128 neurons)
         self.model = nn.Sequential(
-            nn.Linear(state_size, 128), nn.ReLU(inplace=True),
-            nn.Linear(128, 1),
+            nn.Linear(state_size, 64), nn.Tanh(),
+            nn.Linear(64, 1),
         )
 
         if path is not None:

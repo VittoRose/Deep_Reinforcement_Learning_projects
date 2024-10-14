@@ -17,12 +17,6 @@ LAMBDA = 0.95
 BUFFER_SIZE = 64       # it's also the number of timestep explored for each iteration
 T = 64
 
-# Boundaries
-MAX_ANGLE = pi/2
-MAX_OMEGA = 2
-SUCCESS_STEP = 500
-SMALL_ANGLE = 0.05
-
-# Reward
-MAX_ANGLE_EXCEEDED = -20
-SMALL_ANGLE_REWARD = 1
+# Loop parameters
+MAX_ITERATION = 10_000
+TEST_RESET = 50

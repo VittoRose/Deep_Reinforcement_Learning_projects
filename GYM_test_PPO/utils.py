@@ -4,11 +4,12 @@ from copy import deepcopy
 
 def get_action(actor, state) -> tuple[torch.tensor, torch.tensor]:
     
-    action_probs = actor(state)
+    with torch.no_grad():
+        action_probs = actor(state)
 
-    action = torch.multinomial(action_probs, 1)
+        action = torch.multinomial(action_probs, 1)
 
-    prob_action = action_probs[action].item()
+        prob_action = action_probs[action].item()
 
     #print("Network output: ", action_probs, "Action choosen: ", action, " with probability: ", prob_action)
 
@@ -28,14 +29,36 @@ def calculate_advantage(rewards, terminated, values, value_end, T, gamma:int = G
             next_value = values[t]
         
         # TD error: δ_t = r_t + (1 - done) *γ * V(s_{t+1})  - V(s_t)
-        delta = rewards[t] + (1-terminated[t])*gamma*next_value - values[t]
+        delta_t = rewards[t] + (1-terminated[t])*gamma*next_value - values[t]
 
         # Advantage for actor update
-        gae = delta + (1-terminated[t])*gamma*lam*gae
+        gae = delta_t + (1-terminated[t])*gamma*lam*gae
         advanteges[t] = gae 
 
         # Value target for critic update
         value_target[t] = advanteges[t] + values[t]
+
+    return advanteges, value_target
+
+def calculate_advantage_new(rewards, terminated, values, value_end, T:int, gamma:int = GAMMA):
+    # Preallocation
+    advanteges = torch.zeros_like(rewards)
+    reward = torch.zeros_like(rewards)
+    discounted_rew = torch.zeros(1)
+    value_target = torch.zeros_like(rewards)
+
+    for t in reversed(range(T)):
+        if t == T-1:
+            next_value = value_end
+        else:
+            next_value = values[t]
+        
+        discounted_rew = (1-terminated[t])*(rewards[t] + gamma*discounted_rew)
+        
+        advanteges[t] = discounted_rew - next_value
+        value_target[t] = discounted_rew
+
+        # Value target for critic update
 
     return advanteges, value_target
 
@@ -44,13 +67,13 @@ def PPO_loss(advantages, prob_action, old_prob_action) -> torch.tensor:
     # Finding the ratio (pi_theta / pi_theta__old)
     ratio = prob_action/old_prob_action
 
-    no_clip = ratio*advantages
-    clip = torch.clamp(ratio, 1-CLIP, 1+CLIP)*advantages
+    surr1 = ratio*advantages
+    surr2 = torch.clamp(ratio, 1-CLIP, 1+CLIP)*advantages
 
-    losses = -torch.min(no_clip, clip)
+    losses = torch.min(surr1, surr2)
 
     # Mean loss across enviroment and timesteps   
-    loss = losses.mean()
+    loss = -losses.mean()
 
     #print("Loss: ", loss)
 

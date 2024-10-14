@@ -5,6 +5,7 @@ import Network
 from parameters import *
 from utils import *
 from torch.utils.tensorboard import SummaryWriter
+from time import time
 
 # Enviroment
 #env = gym.make("MountainCar-v0", render_mode="rgb_array", goal_velocity=0.1)
@@ -21,7 +22,7 @@ nn = (actor, critic)
 actor_optim = torch.optim.Adam(actor.parameters(), lr=LR_ACTOR)
 critic_optim = torch.optim.Adam(critic.parameters(), lr=LR_CRITIC)
 
-name = "pole_002"
+name = "new_adv"
 
 logger = SummaryWriter("logs/" + name)
 
@@ -38,9 +39,13 @@ prob_actions_old = torch.zeros(T)
 iteration = 0
 ep_reward = 0
 reset = 0
+print("")
+
+# Save starting time
+t0 = time()
 
 try:
-    while running:
+    while running and iteration < MAX_ITERATION:
         
         # Perform T step in the enviroment and store transition data
         for t in range(T):
@@ -73,7 +78,7 @@ try:
                 state, _ = env.reset()
 
                 logger.add_scalar("Rewards", ep_reward, reset)
-                print(f"\rEpisode reward: {ep_reward}\tIteration: {iteration}", end="")
+                print(f"\rEpisode reward: {ep_reward}\t Progress: {iteration/MAX_ITERATION*100+0.01:.2f} %", end="")
                 reset += 1
                 ep_reward = 0
 
@@ -108,11 +113,46 @@ try:
 except KeyboardInterrupt:
     running = False
 
+print("\nTraining done")
+print(f"Time: {time()- t0:.2}s")
+# ----------------------------------
+#           TEST NETWORK
+# ----------------------------------
+
+state, _ = env.reset()
+ep_len = 0
+ep_rw = 0
+reset = 0
+
+try:
+    
+    while reset <= TEST_RESET and running:
+
+        with torch.nograd():    
+            action_prbs = actor(state)
+            action = torch.argmax(action_prbs)
+
+        ns, rw, ter, trun, _ = env.step(action)
+
+        ep_rw += rw
+        if ter or trun:
+            logger("Test/Episode reward: ", ep_rw, reset)
+            logger("Test/Episode len: ", ep_len, reset)
+            
+            # Update counting variable
+            reset += 1
+            ep_len = 0
+            ep_rw = 0
+        else:
+            ep_len +=1   
+        
+
+except KeyboardInterrupt:
+    running = False    
+
 env.close()
 
 logger.flush()
 logger.close()
 
 actor.save("NN/" + name)
-
-print("\nTraining done")
