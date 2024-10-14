@@ -20,7 +20,7 @@ old_actor = old_network(actor)
 actor_optim = torch.optim.Adam(actor.parameters(), lr=LR_ACTOR)
 critic_optim = torch.optim.Adam(critic.parameters(), lr=LR_CRITIC)
 
-name = "new_adv"
+name = "minibatch"
 
 logger = SummaryWriter("logs/" + name)
 
@@ -83,18 +83,28 @@ try:
             else: 
                 state = next_state
 
-        # Compute quantities to update NN
-        advantage, value_target = calculate_advantage(rewards, done_term, values, next_value, T)
+        # Update networks using minibatches
 
-        # Compute loss for actor
-        loss = PPO_loss(advantage, prob_actions, prob_actions_old)
+        for i in range(K):
 
-        logger.add_scalar("Loss actor", loss.item(), iteration)
+            index = (i*MINI_BATCH, (i+1)*MINI_BATCH)
 
-        actor_update(loss, actor, actor_optim, old_actor)
+            # Compute quantities to update NN
+            advantage, value_target = calculate_advantage(rewards, done_term, values, next_value, index)
 
-        loss_c = critic_update(values, value_target, critic_optim)
-        logger.add_scalar("Loss critic", loss_c, iteration)
+            # Compute loss for actor
+            loss = PPO_loss(advantage, prob_actions, prob_actions_old, index)
+
+            logger.add_scalar("Loss actor", loss.item(), iteration)
+
+            actor_update(loss, actor, actor_optim, old_actor)
+
+            loss_c = critic_update(values, value_target, critic_optim, index)
+            logger.add_scalar("Loss critic", loss_c, iteration)
+
+            if i>2:
+                print("asdasda")
+                quit()
 
         # Reset buffer
         values = torch.zeros(T)
