@@ -18,7 +18,7 @@ def get_action(actor, state) -> tuple[torch.tensor, torch.tensor]:
 def calculate_advantage(rewards, terminated, values, value_end, T, gamma:int = GAMMA, lam:int = LAMBDA):
      
     # Preallocation
-    advanteges = torch.zeros_like(rewards)
+    advantages = torch.zeros_like(rewards)
     gae = torch.zeros(1)
     value_target = torch.zeros_like(rewards)
 
@@ -33,12 +33,15 @@ def calculate_advantage(rewards, terminated, values, value_end, T, gamma:int = G
 
         # Advantage for actor update
         gae = delta_t + (1-terminated[t])*gamma*lam*gae
-        advanteges[t] = gae 
+        advantages[t] = gae 
 
         # Value target for critic update
-        value_target[t] = advanteges[t] + values[t]
+        value_target[t] = advantages[t] + values[t]
 
-    return advanteges, value_target
+    advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+
+
+    return advantages, value_target
 
 def calculate_advantage_new(rewards, terminated, values, value_end, T:int, gamma:int = GAMMA):
     # Preallocation
@@ -56,9 +59,10 @@ def calculate_advantage_new(rewards, terminated, values, value_end, T:int, gamma
         discounted_rew = (1-terminated[t])*(rewards[t] + gamma*discounted_rew)
         
         advanteges[t] = discounted_rew - next_value
-        value_target[t] = discounted_rew
 
         # Value target for critic update
+        value_target[t] = discounted_rew
+
 
     return advanteges, value_target
 
@@ -98,7 +102,7 @@ def critic_update(values, value_target, crit_optim) -> int:
 
     # Backpropagation
     crit_optim.zero_grad()
-    loss.backward()
+    loss.backward(retain_graph=True)
     crit_optim.step()
 
     return loss

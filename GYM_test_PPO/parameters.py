@@ -16,6 +16,8 @@ LAMBDA = 0.95
 # Buffer param
 BUFFER_SIZE = 64       # it's also the number of timestep explored for each iteration
 T = 64
+K = 4
+MINI_BATCH = 64//K
 
 # Loop parameters
 MAX_ITERATION = 10_000

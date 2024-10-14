@@ -1,6 +1,5 @@
 import torch
 import gymnasium as gym
-import PPO
 import Network
 from parameters import *
 from utils import *
@@ -16,7 +15,6 @@ state, _ = env.reset()
 actor = Network.Actor(len(state), 2)
 critic = Network.Critic(len(state))
 old_actor = old_network(actor) 
-nn = (actor, critic)
 
 # Optimizer
 actor_optim = torch.optim.Adam(actor.parameters(), lr=LR_ACTOR)
@@ -99,8 +97,8 @@ try:
         logger.add_scalar("Loss critic", loss_c, iteration)
 
         # Reset buffer
-        rewards = torch.zeros(T)
         values = torch.zeros(T)
+        rewards = torch.zeros(T)
         done_term = torch.zeros(T)
         done_trunc = torch.zeros(T)
 
@@ -114,7 +112,7 @@ except KeyboardInterrupt:
     running = False
 
 print("\nTraining done")
-print(f"Time: {time()- t0:.2}s")
+print(f"Time: {(time()- t0)/60:.2} min")
 # ----------------------------------
 #           TEST NETWORK
 # ----------------------------------
