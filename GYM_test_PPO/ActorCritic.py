@@ -21,13 +21,24 @@ class Agent(nn.Module):
     def get_value(self, x):
         return self.critic(x)
 
-    def get_action_and_value(self, x, action=None):
-        logits = self.actor(x)
-        probs = Categorical(logits=logits)
-        if action is None:
-            action = probs.sample()
-        return action, probs.log_prob(action), probs.entropy(), self.critic(x)
+    def get_action_and_value(self, x, action=None, train: bool=True):
 
+        logits = self.actor(x)
+        if train:
+            probs = Categorical(logits=logits)
+            if action is None:
+                action = probs.sample()
+
+            return action, probs.log_prob(action), probs.entropy(), self.critic(x)
+        else:
+            action = torch.argmax(logits)
+            return action
+    
+    def get_action_test(self, x) -> int:
+        logits = self.actor(x)
+        action = torch.argmax(logits)
+
+        return action             
 
 def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
     torch.nn.init.orthogonal_(layer.weight, std)
@@ -79,3 +90,22 @@ def make_actor(envs, init_layer) -> torch.nn:
             nn.Linear(64, envs.single_action_space.n)
         )
     return actor
+
+if __name__ == "__main__":
+    import gymnasium as gym
+
+    def make_env():
+        return gym.make("CartPole-v1")
+
+    # Vector enviroment object
+    env = gym.vector.SyncVectorEnv([make_env for _ in range(1)])
+    state, _ = env.reset()
+
+    netw = Agent(env)
+
+    state_t = torch.tensor(state)
+
+    action = netw.get_action_test(state_t)
+    print("action ", action)
+
+    state, rew, trunc, term, _ = env.step(action)

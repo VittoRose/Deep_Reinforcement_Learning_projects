@@ -11,12 +11,18 @@ from parameters import *
 # Tensorboard Summary writer
 logger = make_logger(None)
 
+# Aggiungere seed, test enviroment, cuda, misura della velocità, Test su altri ambienti
+
 def make_env():
     return gym.make("CartPole-v1")
 
 if __name__ == "__main__":
 
+    # Vector enviroment object
     envs = gym.vector.SyncVectorEnv([make_env for _ in range(n_env)])
+    test_env = gym.make("CartPole-v1")
+    
+    # RL agent and optimizer
     agent = Agent(envs)
     optimizer = optim.Adam(agent.parameters(), lr=LR, eps=1e-5)
 
@@ -28,8 +34,10 @@ if __name__ == "__main__":
     dones = torch.zeros((n_step, n_env))
     values = torch.zeros((n_step, n_env))
 
+    # Collect reward to plot
     ep_reward = torch.tensor(n_env)
     place = 0
+    test_place = 0
 
     # TRY NOT TO MODIFY: start the game
     global_step = 0             # Number of enviroment step
@@ -37,13 +45,16 @@ if __name__ == "__main__":
     next_obs = torch.tensor(next_obs)
     next_done = torch.zeros(n_env)
     num_updates = MAX_ITERATION // BATCH_SIZE
+    test_counter = 0
 
     for update in range(1, num_updates + 1):
 
         # Here we can modify the learning rate
 
+        # Collect data from the enviroment
         for step in range(0, n_step):
             global_step += 1*n_env
+
             obs[step] = next_obs
             dones[step] = next_done
 
@@ -54,13 +65,14 @@ if __name__ == "__main__":
             actions[step] = action
             logprobs[step] = logprob
 
-            # TRY NOT TO MODIFY: execute the game and log data.
+            # Execute action in enviroment
             next_obs, reward, truncated, terminated, info = envs.step(action.numpy())
             done = terminated | truncated
 
             rewards[step] = torch.tensor(reward)
             next_obs, next_done = torch.tensor(next_obs), torch.tensor(done)
 
+            # Collect rewards per episode
             with torch.no_grad():
                 ep_reward = ep_reward + rewards[step]
 
@@ -130,7 +142,7 @@ if __name__ == "__main__":
                 # Entropy loss
                 entropy_loss = entropy.mean()
 
-                # TODO: entropy loss and v_loss has an hyperparam
+                # Global loss function
                 loss = pg_loss - ENTROPY_COEF*entropy_loss + VALUE_COEFF*v_loss
 
                 optimizer.zero_grad()
@@ -139,9 +151,36 @@ if __name__ == "__main__":
                 nn.utils.clip_grad_norm_(agent.parameters(), 0.5)
                 optimizer.step()
 
+                test_counter += 1
+
+            if test_counter % TEST_INTERVAL == 0:
+                stop_test = False
+                test_reward = 0
+                test_state, _ = test_env.reset()
+
+                while not stop_test:
+                    # Get action with argmax
+                    with torch.no_grad():
+                        test_state_tensor = torch.tensor(test_state)
+                        test_action = agent.get_action_test(test_state_tensor)
+
+                    ns, rw, ter, trun, _ = test_env.step(test_action.numpy())
+                    test_reward += rw
+                    test_state = ns
+
+                    if ter or trun:
+                        if logger is not None:
+                            logger.add_scalar("Test/Reward", test_reward, test_place)
+                            test_reward = 0
+                            test_place += 1
+                        stop_test = True
+
+    test_env.close()                
+
     envs.close()
-    if logger is not None:
-        logger.close()
 
     print("Training over")
+       
 
+    if logger is not None:
+        logger.close()

@@ -17,6 +17,9 @@ VALUE_COEFF = 0.5               # Value coefficent for loss calculation
 
 MINI_BATCH_SIZE = BATCH_SIZE//K_EPOCHS      # Be careful here
 
+# Test parameters
+TEST_INTERVAL = 10
+
 """
 -----------------------------------------------------------------------
                             Utils function
