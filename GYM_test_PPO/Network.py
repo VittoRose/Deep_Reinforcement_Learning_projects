@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch.distributions.categorical import Categorical
 
 class Actor(nn.Module):
     """
@@ -98,3 +99,57 @@ class Critic(nn.Module):
     def load(self, path):
         # Load old parameters from pre-trained network
         self.model.load_state_dict(torch.load(path))
+
+class ActorCritic(nn.Module):
+    def __init__(self, state_dim, action_dim):
+        super(ActorCritic, self).__init__()
+        
+        self.actor = nn.Sequential(
+            nn.Linear(state_dim, 64),
+            nn.Tanh(),
+            nn.Linear(64,64), 
+            nn.Tanh(),
+            nn.Linear(64, action_dim),
+            nn.Softmax(dim=-1)
+            )
+        
+        self.critic = nn.Sequential(
+            nn.Linear(state_dim, 64), 
+            nn.Tanh(),
+            nn.Linear(64, 64),
+            nn.Tanh(),
+            nn.Linear(64,1)
+            )
+
+    def get_value(self, x):
+        return self.critic(x)
+    
+    def get_action_value(self, x):
+        logits = self.actor(x)
+        probs = Categorical(logits=logits)
+
+        action = probs.sample()
+
+        return action, probs.log_prob(action), probs.entropy, self.critic(x)
+
+
+    """
+    def forward(self, state: torch.tensor) -> tuple[torch.tensor, torch.tensor]:
+        return self.forward_actor(state), self.forward_critic(state)
+    
+    def forward_actor(self, state) -> torch.tensor:
+        return self.policy(state)
+    
+    def forward_critic(self, state) -> torch.tensor:
+        return self.value(state)
+    """
+    
+if __name__ == "__main__":
+    ac = ActorCritic(2, 2)
+
+    action, log_prob, entr, value = ac.get_action_value(torch.rand(2))
+
+    print("Action ", action)
+    print("Value ", value)
+    print("entropy ", entr)
+    print("logprob ", log_prob)
