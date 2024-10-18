@@ -12,7 +12,7 @@ GAE_LAMBDA = 0.99               # TD(lambda) factor: 1 ->
 K_EPOCHS = 4                    # Number of update at the end data collection
 
 CLIP = 0.2                      # Clipping factor in policy loss
-ENTROPY_COEF = 0.01             # Entropy coefficent for loss calculation
+ENTROPY_COEF = 0.03             # Entropy coefficent for loss calculation
 VALUE_COEFF = 0.5               # Value coefficent for loss calculation
 
 MINI_BATCH_SIZE = BATCH_SIZE//K_EPOCHS      # Be careful here
