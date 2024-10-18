@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     # Name the experiment
     name = "mountain_car_new_reward1"
-    gym_id = "MountainCar-v0"
+    gym_id = "MountainCar-v0"           # Do not modify
 
     # Tensorboard Summary writer
     logger = make_logger(gym_id, name)

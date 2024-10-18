@@ -9,7 +9,7 @@ def create_md_summary(gym_id: str, name: str)-> None:
     report = folder + name + ext
     
     with open(report, 'w') as file:
-        file.write("# Enviroment: " + gym_id)
+        file.write("# Enviroment: " + gym_id + "\n")
         file.write("# Training parameters\n")
 
         file.write(f"-Number of enviroments: {n_env}\n")

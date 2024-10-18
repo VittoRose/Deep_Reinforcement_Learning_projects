@@ -14,7 +14,7 @@ from parameters import *
 if __name__ == "__main__":
 
     # Name the experiment
-    name = "acrobot_00"
+    name = "acrobot_01"
     gym_id = "Acrobot-v1"
 
     # Tensorboard Summary writer
@@ -27,9 +27,11 @@ if __name__ == "__main__":
     envs = gym.vector.SyncVectorEnv([make_env(gym_id,i, rnd=False) for i in range(n_env)])
     
     # Test enviroment
-    test_env = gym.make(gym_id)
-    #if name is not None:
-    #    test_env = gym.wrappers.RecordVideo(test_env, f"videos/{name}", episode_trigger=lambda x: True)
+    test_env = gym.make(gym_id, render_mode="rgb_array")
+    if name is not None:
+        test_env = gym.wrappers.RecordVideo(test_env,
+                                             f"videos/{name}",
+                                            episode_trigger=lambda x: x % RECORD_VIDEO == 0)
 
     # RL agent and optimizer
     agent = Agent(envs)
