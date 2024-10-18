@@ -26,52 +26,65 @@ TEST_INTERVAL = 10
 -----------------------------------------------------------------------
 """
 
-accuracy = 95.4
-loss = 0.023
-num_layers = 3
-hidden_units = 128
-
-# Testo markdown con variabili incluse
-markdown_text = f"""
-# Risultati dell'esperimento
-
-Ecco una descrizione dei risultati ottenuti:
-
-* **Accuratezza:** {accuracy}%
-* **Loss:** {loss}
-
-## Dettagli del modello
-
-Il modello utilizzato ha **{num_layers}** strati con **{hidden_units}** unità nascoste.
-
-"""
-
 # Tensorboard log creation
 from torch.utils.tensorboard import SummaryWriter
-def make_logger(name: str) -> SummaryWriter:
+from md_report import create_md_summary
+def make_logger(gym_id: str,name: str) -> SummaryWriter:
     if name is not None:
-        logger = SummaryWriter("logs_gh/" + name)
 
-        logger.add_text("Training parameters",f"Number of enviroments: {n_env}")
-        logger.add_text("Training parameters",f"Timestep for collecting data T = {n_step}")
-        logger.add_text("Training parameters",f"Total data for each loop: {BATCH_SIZE}")
-        logger.add_text("Training parameters",f"Update epoch K = {K_EPOCHS}")
-        logger.add_text("Training parameters",f"Minibatch size {MINI_BATCH_SIZE}")
-
-        logger.add_text("Hyperparameters",f"Discount factor: {GAMMA}")
-        logger.add_text("Hyperparameters",f"GAE lambda: {GAE_LAMBDA}")
-        logger.add_text("Hyperparameters",f"Learning rate: {LR}")
-        logger.add_text("Hyperparameters",f"Clipping factor: {CLIP}")
-        logger.add_text("Hyperparameters",f"Loss c1 = {VALUE_COEFF} c2 = {ENTROPY_COEF}")
-
+        # Create tensorboard logger
+        logger = SummaryWriter("logs/" + name)
+        
+        # Create a md file for hyperparam
+        create_md_summary(gym_id, name)
 
     else:
         logger = None
-    print(f"Tensorboard logger: {name}")
+    print(f"Experiment name: {name}")
 
     return logger
 
 # Function for making vector enviroment
-from gymnasium import make
-def make_env2(env_name: str):
-    return make(env_name)
+import gymnasium as gym
+import torch
+import numpy as np
+import random
+from time import time
+
+def make_env(gym_id: str,idx: int, rnd: bool = False) -> gym.spaces:
+    def alias():
+
+        # Change env name here
+        env = gym.make(gym_id)
+        
+        # Set a random seed if specified
+        if rnd:
+            seed = time()
+        else:
+            seed = 92 
+        """
+        env.seed(seed+idx)
+        env.action_space.seed(seed+idx)
+        env.observation_space.seed(seed+idx)
+        """
+        return env
+    
+    return alias
+
+def set_seed(rnd: bool = False) -> None:
+    """
+    Function to set seed on all packages exept for gymansium
+    :param rnd: Flag for random seed, if true use time() as seed
+    """
+    if rnd:
+        random.seed(time())
+        np.random.seed(time())
+        torch.manual_seed(time())
+        torch.backends.cudnn.deterministic = False
+        print("Using Random seed")
+    else:
+        random.seed(92)
+        np.random.seed(92)
+        torch.manual_seed(92)
+        torch.backends.cudnn.deterministic = True
+        print("Using deterministic seed")

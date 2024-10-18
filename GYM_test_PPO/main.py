@@ -10,17 +10,27 @@ from parameters import *
 
 # Aggiungere seed, cuda, misura della velocità, Test su altri ambienti
 
-def make_env():
-    return gym.make("CartPole-v1")
 
 if __name__ == "__main__":
-    # Tensorboard Summary writer
-    logger = make_logger("markdown")
 
-    # Vector enviroment object
-    envs = gym.vector.SyncVectorEnv([make_env for _ in range(n_env)])
-    test_env = gym.make("CartPole-v1")
+    # Name the experiment
+    name = "acrobot_00"
+    gym_id = "Acrobot-v1"
+
+    # Tensorboard Summary writer
+    logger = make_logger(gym_id, name)
+
+    # Experiment run with deterministic seed, to use random seed modify also enviroment
+    set_seed(False)
+
+    # Vector enviroment object, change rnd to true for random seed
+    envs = gym.vector.SyncVectorEnv([make_env(gym_id,i, rnd=False) for i in range(n_env)])
     
+    # Test enviroment
+    test_env = gym.make(gym_id)
+    #if name is not None:
+    #    test_env = gym.wrappers.RecordVideo(test_env, f"videos/{name}", episode_trigger=lambda x: True)
+
     # RL agent and optimizer
     agent = Agent(envs)
     optimizer = optim.Adam(agent.parameters(), lr=LR, eps=1e-5)
@@ -35,7 +45,8 @@ if __name__ == "__main__":
 
     # Collect reward to plot
     ep_reward = torch.tensor(n_env)
-    place = 0
+    rw_place = 0
+    ls_place = 0
     test_place = 0
 
     # TRY NOT TO MODIFY: start the game
@@ -46,7 +57,16 @@ if __name__ == "__main__":
     num_updates = MAX_ITERATION // BATCH_SIZE
     test_counter = 0
 
+    """
+    ------------------------------------------------------------
+                        TRAINING LOOP
+    ------------------------------------------------------------
+    """
+
     for update in range(1, num_updates + 1):
+
+        # Show progress during training
+        print(f"\r Progress: {update/num_updates*100:2.2f} %", end="")
 
         # Here we can modify the learning rate
 
@@ -78,8 +98,8 @@ if __name__ == "__main__":
             for i in range(len(done)):
                 if done[i]:
                     if logger is not None:
-                        logger.add_scalar("Train/Episode Reward", ep_reward[i], place)
-                        place += 1
+                        logger.add_scalar("Train/Episode Reward", ep_reward[i], rw_place)
+                        rw_place += 1
                     ep_reward[i] = 0
 
         # bootstrap value if not done
@@ -112,8 +132,12 @@ if __name__ == "__main__":
 
         # Update network K times
         for epoch in range(K_EPOCHS):
-            np.random.shuffle(index)      # Shuffle index, idk why, io lo toglierei
-            for start in range(0, BATCH_SIZE, MINI_BATCH_SIZE):     # from 0 to batch_size, minibatch step
+
+            # Shuffle index to break correlations
+            np.random.shuffle(index)      
+
+            # Update using minibatches
+            for start in range(0, BATCH_SIZE, MINI_BATCH_SIZE):     
                 end = start + MINI_BATCH_SIZE
 
                 mini_batch_index = index[start:end]
@@ -144,6 +168,10 @@ if __name__ == "__main__":
                 # Global loss function
                 loss = pg_loss - ENTROPY_COEF*entropy_loss + VALUE_COEFF*v_loss
 
+                if logger is not None:
+                    logger.add_scalar("Train/Loss", loss.item(), ls_place)
+                    ls_place +=1
+
                 optimizer.zero_grad()
                 loss.backward()
                 # TODO: be sure about clipping gradient norm
@@ -152,14 +180,14 @@ if __name__ == "__main__":
 
                 test_counter += 1
 
-            logger.add_graph(agent.actor, torch.rand(envs.single_observation_space.shape))
-            logger.close()
-            quit()
-
             if test_counter % TEST_INTERVAL == 0:
                 stop_test = False
                 test_reward = 0
                 test_state, _ = test_env.reset()
+                
+                # Record 1 of 30 test episode
+                #if (test_counter % 30*TEST_INTERVAL == 0):
+                #    test_env.render()
 
                 while not stop_test:
                     # Get action with argmax
@@ -181,7 +209,8 @@ if __name__ == "__main__":
     # Close api
     test_env.close()                
     envs.close()
+
     if logger is not None:
         logger.close()
 
-    print("Training over") 
+    print("\nTraining over") 
