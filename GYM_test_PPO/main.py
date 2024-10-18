@@ -8,15 +8,14 @@ import torch.optim as optim
 from ActorCritic import Agent
 from parameters import *
 
-# Tensorboard Summary writer
-logger = make_logger(None)
-
-# Aggiungere seed, test enviroment, cuda, misura della velocità, Test su altri ambienti
+# Aggiungere seed, cuda, misura della velocità, Test su altri ambienti
 
 def make_env():
     return gym.make("CartPole-v1")
 
 if __name__ == "__main__":
+    # Tensorboard Summary writer
+    logger = make_logger("markdown")
 
     # Vector enviroment object
     envs = gym.vector.SyncVectorEnv([make_env for _ in range(n_env)])
@@ -153,6 +152,10 @@ if __name__ == "__main__":
 
                 test_counter += 1
 
+            logger.add_graph(agent.actor, torch.rand(envs.single_observation_space.shape))
+            logger.close()
+            quit()
+
             if test_counter % TEST_INTERVAL == 0:
                 stop_test = False
                 test_reward = 0
@@ -175,12 +178,10 @@ if __name__ == "__main__":
                             test_place += 1
                         stop_test = True
 
+    # Close api
     test_env.close()                
-
     envs.close()
-
-    print("Training over")
-       
-
     if logger is not None:
         logger.close()
+
+    print("Training over") 
