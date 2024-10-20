@@ -3,7 +3,7 @@
 n_env = 4
 n_step = 128                    # Number of step in the enviroment between each update
 BATCH_SIZE = n_env*n_step       # Data collected for each update
-MAX_ITERATION = 1_000_000
+MAX_EPOCH = 30
 
 # Hyperparameters
 LR = 2.5e-4                     # Optimizer learning rate
@@ -30,14 +30,15 @@ RECORD_VIDEO = 50
 # Tensorboard log creation
 from torch.utils.tensorboard import SummaryWriter
 from md_report import create_md_summary
+from collections import deque
 
 class Logger:
     def __init__(self, gym_id: str,name: str) -> SummaryWriter:
         
         if name is not None:
+
             # Create tensorboard logger
-            self.logger = SummaryWriter("logs/" + name)
-            
+            self.logger = SummaryWriter("debug/" + name)
             # Create a md file for hyperparam
             create_md_summary(gym_id, name)
 
@@ -49,6 +50,9 @@ class Logger:
         self.train_index = 0
         self.test_index = 0
 
+        self.timer = time()
+        self.buff = deque(maxlen=100)
+
     def add_train_rew(self, reward: int, tag: str = "Train/Episode Reward") -> None:
 
         if self.logger is not None:
@@ -58,7 +62,7 @@ class Logger:
     def add_loss(self, loss: int, tag: str = "Train/Loss") -> None:
         
         if self.logger is not None:
-            if type(loss) == int:
+            if type(loss) == float:
                 self.logger.add_scalar(tag, loss, self.loss_index)
             else: 
                 self.logger.add_scalar(tag, loss.item(), self.loss_index)
@@ -72,10 +76,20 @@ class Logger:
     
     def close(self):
         if self.logger is not None:
+            self.logger.flush()
             self.logger.close()
 
+    def show_progress(self, update) -> None: 
         
-
+        if update != 1:
+            dt = time()-self.timer
+            epoch_speed = 1/dt
+        else: 
+            epoch_speed = 0
+        self.timer = time()
+        self.buff.append(epoch_speed)
+        avg = sum(self.buff)/len(self.buff)
+        print(f"\rProgress: {update/MAX_EPOCH*100:2.2f} % \t Epoch/s: {epoch_speed:.2f} \t Average speed: {avg:.2f}", end="")
 
 
 # Function for making vector enviroment
@@ -122,3 +136,26 @@ def set_seed(rnd: bool = False) -> None:
         torch.manual_seed(92)
         torch.backends.cudnn.deterministic = True
         print("Using deterministic seed")
+
+def test_netwrok(update, agent, test_env, logger):
+    """
+    Execute a complete run in a test enviroment without exploration
+    """
+    if update % TEST_INTERVAL:
+        stop_test = False
+        test_reward = 0
+        test_state, _ = test_env.reset()
+        
+        while not stop_test:
+            # Get action with argmax
+            with torch.no_grad():
+                test_state_tensor = torch.tensor(test_state)
+                test_action = agent.get_action_test(test_state_tensor)
+
+            ns, rw, ter, trun, _ = test_env.step(test_action.numpy())
+            test_reward += rw
+            test_state = ns
+
+            if ter or trun:
+                logger.add_test(test_reward)
+                stop_test = True

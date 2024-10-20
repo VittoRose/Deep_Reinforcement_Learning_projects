@@ -12,6 +12,7 @@ def create_md_summary(gym_id: str, name: str)-> None:
         file.write("# Enviroment: " + gym_id + "\n")
         file.write("## Training parameters\n")
 
+        file.write(f"- Total epoch: {MAX_EPOCH}\n")
         file.write(f"- Number of enviroments: {n_env}\n")
         file.write(f"- Timestep for collecting data T = {n_step}\n")
         file.write(f"- Total data for each loop: {BATCH_SIZE}\n")

@@ -1,5 +1,3 @@
-# Working with parallel enviroment
-
 import gymnasium as gym
 import numpy as np
 import torch
@@ -8,212 +6,169 @@ import torch.optim as optim
 from ActorCritic import Agent
 from parameters import *
 
-# Aggiungere seed, cuda, misura della velocità, Test su altri ambienti
+# Name the experiment
+name = "tesino2"
+gym_id = "Acrobot-v1"
 
+# Tensorboard Summary writer
+logger = Logger(gym_id, name)
 
-if __name__ == "__main__":
+# Experiment run with deterministic seed, to use random seed modify also enviroment
+set_seed(rnd=False)
 
-    # Name the experiment
-    name = None
-    gym_id = "Acrobot-v1"
+# Vector enviroment object, change rnd to true for random seed
+envs = gym.vector.SyncVectorEnv([make_env(gym_id,i, rnd=False) for i in range(n_env)])
 
-    # Tensorboard Summary writer
-    logger = Logger(gym_id, name)
+# Test enviroment
+test_env = gym.make(gym_id, render_mode="rgb_array")
+"""
+if name is not None:
+    test_env = gym.wrappers.RecordVideo(test_env,
+                                        f"videos/{name}",
+                                        episode_trigger=lambda x: x % RECORD_VIDEO == 0)
+"""
 
-    # Experiment run with deterministic seed, to use random seed modify also enviroment
-    set_seed(False)
+# RL agent and optimizer
+agent = Agent(envs)
+optimizer = optim.Adam(agent.parameters(), lr=LR, eps=1e-5)
 
-    # Vector enviroment object, change rnd to true for random seed
-    envs = gym.vector.SyncVectorEnv([make_env(gym_id,i, rnd=False) for i in range(n_env)])
+# Buffer preallocation
+obs = torch.zeros((n_step, n_env) + envs.single_observation_space.shape)
+actions = torch.zeros((n_step, n_env) + envs.single_action_space.shape)
+logprobs = torch.zeros((n_step, n_env))
+rewards = torch.zeros((n_step, n_env))
+dones = torch.zeros((n_step, n_env))
+values = torch.zeros((n_step, n_env))
+
+# Collect reward to plot
+ep_reward = torch.tensor(n_env)
+
+# TRY NOT TO MODIFY: start the game
+next_obs, _ = envs.reset()
+next_obs = torch.tensor(next_obs)
+next_done = torch.zeros(n_env)
+test_counter = 0
+timer = time()
+
+"""
+------------------------------------------------------------
+                    TRAINING LOOP
+------------------------------------------------------------
+"""
+
+for update in range(0, MAX_EPOCH):
+
+    # Show progress during training
+    logger.show_progress(update)
+
+    test_netwrok(update, agent, test_env, logger)
     
-    # Test enviroment
-    test_env = gym.make(gym_id, render_mode="rgb_array")
-    if name is not None:
-        test_env = gym.wrappers.RecordVideo(test_env,
-                                             f"videos/{name}",
-                                            episode_trigger=lambda x: x % RECORD_VIDEO == 0)
+    # Here we can modify the learning rate
 
-    # RL agent and optimizer
-    agent = Agent(envs)
-    optimizer = optim.Adam(agent.parameters(), lr=LR, eps=1e-5)
+    # Collect data from the enviroment
+    for step in range(0, n_step):
 
-    # Buffer preallocation
-    obs = torch.zeros((n_step, n_env) + envs.single_observation_space.shape)
-    actions = torch.zeros((n_step, n_env) + envs.single_action_space.shape)
-    logprobs = torch.zeros((n_step, n_env))
-    rewards = torch.zeros((n_step, n_env))
-    dones = torch.zeros((n_step, n_env))
-    values = torch.zeros((n_step, n_env))
+        obs[step] = next_obs
+        dones[step] = next_done
 
-    # Collect reward to plot
-    ep_reward = torch.tensor(n_env)
-    rw_place = 0
-    ls_place = 0
-    test_place = 0
-
-    # TRY NOT TO MODIFY: start the game
-    global_step = 0             # Number of enviroment step
-    next_obs, _ = envs.reset()
-    next_obs = torch.tensor(next_obs)
-    next_done = torch.zeros(n_env)
-    num_updates = MAX_ITERATION // BATCH_SIZE
-    test_counter = 0
-    timer = time()
-
-    """
-    ------------------------------------------------------------
-                        TRAINING LOOP
-    ------------------------------------------------------------
-    """
-
-    for update in range(1, num_updates + 1):
-
-        # Show progress during training
-        if update != 1:
-            dt = time()-timer
-            epoch_speed = 1/dt
-        else: 
-            epoch_speed = 42
-        timer = time()
-        print(f"\r Progress: {update/num_updates*100:2.2f} % \t Epoch/s: {epoch_speed:.2f} ", end="")
-
-
-        # Here we can modify the learning rate
-
-        # Collect data from the enviroment
-        for step in range(0, n_step):
-            global_step += 1*n_env
-
-            obs[step] = next_obs
-            dones[step] = next_done
-
-            # ALGO LOGIC: action logic
-            with torch.no_grad():
-                action, logprob, _, value = agent.get_action_and_value(next_obs)
-                values[step] = value.flatten()
-            actions[step] = action
-            logprobs[step] = logprob
-
-            # Execute action in enviroment
-            next_obs, reward, truncated, terminated, info = envs.step(action.numpy())
-            done = terminated | truncated
-
-            rewards[step] = torch.tensor(reward)
-            next_obs, next_done = torch.tensor(next_obs), torch.tensor(done)
-
-            # Collect rewards per episode
-            with torch.no_grad():
-                ep_reward = ep_reward + rewards[step]
-
-            for i in range(len(done)):
-                if done[i]:
-                    logger.add_train_rew(ep_reward[i])
-                    ep_reward[i] = 0
-
-        # bootstrap value if not done
+        # Select an action
         with torch.no_grad():
-            next_value = agent.get_value(next_obs).reshape(1, -1)
-            advantages = torch.zeros_like(rewards)
-            lastgaelam = 0
-            for t in reversed(range(n_step)):
-                if t == n_step- 1:
-                    nextnonterminal = 1.0 - next_done.int()
-                    nextvalues = next_value
-                else:
-                    nextnonterminal = 1.0 - dones[t + 1].int()
-                    nextvalues = values[t + 1]
-                delta = rewards[t] + GAMMA * nextvalues * nextnonterminal - values[t]
-                advantages[t] = lastgaelam = delta + GAMMA * GAE_LAMBDA * nextnonterminal * lastgaelam
-            returns = advantages + values
+            action, logprob, _, value = agent.get_action_and_value(next_obs)
+            values[step] = value.flatten()
+        actions[step] = action
+        logprobs[step] = logprob
 
-        # flatten the batch
-        b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
-        b_logprobs = logprobs.reshape(-1)
-        b_actions = actions.reshape((-1,) + envs.single_action_space.shape)
-        b_advantages = advantages.reshape(-1)
-        b_returns = returns.reshape(-1)
-        b_values = values.reshape(-1)
+        # Execute action in enviroment
+        next_obs, reward, truncated, terminated, _ = envs.step(action.numpy())
+        done = terminated | truncated
 
-        # Optimizing the policy and value network
-        index = np.arange(BATCH_SIZE)
-        clipfracs = []
+        rewards[step] = torch.tensor(reward)
+        next_obs, next_done = torch.tensor(next_obs), torch.tensor(done)
 
-        # Update network K times
-        for epoch in range(K_EPOCHS):
+        # Collect rewards per episode
+        with torch.no_grad():
+            ep_reward = ep_reward + rewards[step]
 
-            # Shuffle index to break correlations
-            np.random.shuffle(index)
+        for i, cut in enumerate(done):
+            if cut:
+                logger.add_train_rew(ep_reward[i])
+                ep_reward[i] = 0
 
-            # Update using minibatches
-            for start in range(0, BATCH_SIZE, MINI_BATCH_SIZE):     
-                end = start + MINI_BATCH_SIZE
+    # bootstrap value if not done
+    with torch.no_grad():
+        next_value = agent.get_value(next_obs).reshape(1, -1)
+        advantages = torch.zeros_like(rewards)
+        lastgaelam = 0
+        for t in reversed(range(n_step)):
+            if t == n_step- 1:
+                nextnonterminal = 1.0 - next_done.int()
+                nextvalues = next_value
+            else:
+                nextnonterminal = 1.0 - dones[t + 1].int()
+                nextvalues = values[t + 1]
+            delta = rewards[t] + GAMMA * nextvalues * nextnonterminal - values[t]
+            advantages[t] = lastgaelam = delta + GAMMA * GAE_LAMBDA * nextnonterminal * lastgaelam
+        returns = advantages + values
 
-                mini_batch_index = index[start:end]
+    # flatten the batch
+    b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
+    b_logprobs = logprobs.reshape(-1)
+    b_actions = actions.reshape((-1,) + envs.single_action_space.shape)
+    b_advantages = advantages.reshape(-1)
+    b_returns = returns.reshape(-1)
+    b_values = values.reshape(-1)
 
-                _, newlogprob, entropy, newval = agent.get_action_and_value(b_obs[mini_batch_index], b_actions.long()[mini_batch_index])
-                logratio = newlogprob - b_logprobs[mini_batch_index]
-                ratio = logratio.exp()
+    index = np.arange(BATCH_SIZE)
 
-                mb_advantages = b_advantages[mini_batch_index]
+    # Update network K times
+    for epoch in range(K_EPOCHS):
 
-                # Normalize advantages
-                mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
-                
-                # Policy loss
-                surr1 = -mb_advantages * ratio
-                surr2 = -mb_advantages * torch.clamp(ratio, 1-CLIP, 1+CLIP)
-                pg_loss = torch.max(surr1, surr2).mean()
+        # Shuffle index to break correlations
+        np.random.shuffle(index)
 
-                # Value loss
-                # TODO: add clipped value loss
+        # Update using minibatches
+        for start in range(0, BATCH_SIZE, MINI_BATCH_SIZE):     
+            end = start + MINI_BATCH_SIZE
 
-                v_losses = torch.nn.functional.mse_loss(newval.squeeze(), b_returns[mini_batch_index])
-                v_loss = v_losses.mean()
+            mini_batch_index = index[start:end]
 
-                # Entropy loss
-                entropy_loss = entropy.mean()
+            _, newlogprob, entropy, newval = agent.get_action_and_value(b_obs[mini_batch_index], b_actions.long()[mini_batch_index])
+            logratio = newlogprob - b_logprobs[mini_batch_index]
+            ratio = logratio.exp()
 
-                # Global loss function
-                loss = pg_loss - ENTROPY_COEF*entropy_loss + VALUE_COEFF*v_loss
+            mb_advantages = b_advantages[mini_batch_index]
 
-                logger.add_loss(loss.item())
+            # Normalize advantages
+            mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
+            
+            # Policy loss
+            surr1 = -mb_advantages * ratio
+            surr2 = -mb_advantages * torch.clamp(ratio, 1-CLIP, 1+CLIP)
+            pg_loss = torch.max(surr1, surr2).mean()
 
-                optimizer.zero_grad()
-                loss.backward()
-                # TODO: be sure about clipping gradient norm
-                nn.utils.clip_grad_norm_(agent.parameters(), 0.5)
-                optimizer.step()
+            # Value loss
+            # TODO: add clipped value loss
 
-                test_counter += 1
+            v_losses = torch.nn.functional.mse_loss(newval.squeeze(), b_returns[mini_batch_index])
+            v_loss = v_losses.mean()
 
-            if test_counter % TEST_INTERVAL == 0:
-                stop_test = False
-                test_reward = 0
-                test_state, _ = test_env.reset()
-                
-                # Record 1 of 30 test episode
-                #if (test_counter % 30*TEST_INTERVAL == 0):
-                #    test_env.render()
+            # Entropy loss
+            entropy_loss = entropy.mean()
 
-                while not stop_test:
-                    # Get action with argmax
-                    with torch.no_grad():
-                        test_state_tensor = torch.tensor(test_state)
-                        test_action = agent.get_action_test(test_state_tensor)
+            # Global loss function
+            loss = pg_loss - ENTROPY_COEF*entropy_loss + VALUE_COEFF*v_loss
 
-                    ns, rw, ter, trun, _ = test_env.step(test_action.numpy())
-                    test_reward += rw
-                    test_state = ns
+            logger.add_loss(loss.item())
 
-                    if ter or trun:
-                        logger.add_test(test_reward)
-                        test_reward = 0
-                        stop_test = True
+            optimizer.zero_grad()
+            loss.backward()
+            nn.utils.clip_grad_norm_(agent.parameters(), 0.5)
+            optimizer.step()
 
-    # Close api
-    test_env.close()                
-    envs.close()
 
-    logger.close()
+# Close api
+test_env.close()                
+envs.close()
+logger.close()
 
-    print("\nTraining over") 
+print("\nTraining over") 
