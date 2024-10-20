@@ -14,11 +14,11 @@ from parameters import *
 if __name__ == "__main__":
 
     # Name the experiment
-    name = "acrobot_01"
+    name = None
     gym_id = "Acrobot-v1"
 
     # Tensorboard Summary writer
-    logger = make_logger(gym_id, name)
+    logger = Logger(gym_id, name)
 
     # Experiment run with deterministic seed, to use random seed modify also enviroment
     set_seed(False)
@@ -58,6 +58,7 @@ if __name__ == "__main__":
     next_done = torch.zeros(n_env)
     num_updates = MAX_ITERATION // BATCH_SIZE
     test_counter = 0
+    timer = time()
 
     """
     ------------------------------------------------------------
@@ -68,7 +69,14 @@ if __name__ == "__main__":
     for update in range(1, num_updates + 1):
 
         # Show progress during training
-        print(f"\r Progress: {update/num_updates*100:2.2f} %", end="")
+        if update != 1:
+            dt = time()-timer
+            epoch_speed = 1/dt
+        else: 
+            epoch_speed = 42
+        timer = time()
+        print(f"\r Progress: {update/num_updates*100:2.2f} % \t Epoch/s: {epoch_speed:.2f} ", end="")
+
 
         # Here we can modify the learning rate
 
@@ -99,9 +107,7 @@ if __name__ == "__main__":
 
             for i in range(len(done)):
                 if done[i]:
-                    if logger is not None:
-                        logger.add_scalar("Train/Episode Reward", ep_reward[i], rw_place)
-                        rw_place += 1
+                    logger.add_train_rew(ep_reward[i])
                     ep_reward[i] = 0
 
         # bootstrap value if not done
@@ -136,7 +142,7 @@ if __name__ == "__main__":
         for epoch in range(K_EPOCHS):
 
             # Shuffle index to break correlations
-            np.random.shuffle(index)      
+            np.random.shuffle(index)
 
             # Update using minibatches
             for start in range(0, BATCH_SIZE, MINI_BATCH_SIZE):     
@@ -170,9 +176,7 @@ if __name__ == "__main__":
                 # Global loss function
                 loss = pg_loss - ENTROPY_COEF*entropy_loss + VALUE_COEFF*v_loss
 
-                if logger is not None:
-                    logger.add_scalar("Train/Loss", loss.item(), ls_place)
-                    ls_place +=1
+                logger.add_loss(loss.item())
 
                 optimizer.zero_grad()
                 loss.backward()
@@ -202,17 +206,14 @@ if __name__ == "__main__":
                     test_state = ns
 
                     if ter or trun:
-                        if logger is not None:
-                            logger.add_scalar("Test/Reward", test_reward, test_place)
-                            test_reward = 0
-                            test_place += 1
+                        logger.add_test(test_reward)
+                        test_reward = 0
                         stop_test = True
 
     # Close api
     test_env.close()                
     envs.close()
 
-    if logger is not None:
-        logger.close()
+    logger.close()
 
     print("\nTraining over") 

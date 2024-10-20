@@ -30,20 +30,53 @@ RECORD_VIDEO = 50
 # Tensorboard log creation
 from torch.utils.tensorboard import SummaryWriter
 from md_report import create_md_summary
-def make_logger(gym_id: str,name: str) -> SummaryWriter:
-    if name is not None:
 
-        # Create tensorboard logger
-        logger = SummaryWriter("logs/" + name)
+class Logger:
+    def __init__(self, gym_id: str,name: str) -> SummaryWriter:
         
-        # Create a md file for hyperparam
-        create_md_summary(gym_id, name)
+        if name is not None:
+            # Create tensorboard logger
+            self.logger = SummaryWriter("logs/" + name)
+            
+            # Create a md file for hyperparam
+            create_md_summary(gym_id, name)
 
-    else:
-        logger = None
-    print(f"Experiment name: {name}")
+        else:
+            self.logger = None
+        print(f"Experiment name: {name}")
 
-    return logger
+        self.loss_index = 0
+        self.train_index = 0
+        self.test_index = 0
+
+    def add_train_rew(self, reward: int, tag: str = "Train/Episode Reward") -> None:
+
+        if self.logger is not None:
+            self.logger.add_scalar(tag, reward, self.loss_index)
+            self.loss_index += 1
+        
+    def add_loss(self, loss: int, tag: str = "Train/Loss") -> None:
+        
+        if self.logger is not None:
+            if type(loss) == int:
+                self.logger.add_scalar(tag, loss, self.loss_index)
+            else: 
+                self.logger.add_scalar(tag, loss.item(), self.loss_index)
+            self.loss_index += 1
+
+    def add_test(self, reward: int, tag: str = "Test/Reward") -> None:
+
+        if self.logger is not None:
+            self.logger.add_scalar(tag, reward, self.test_index)
+            self.test_index +=1
+    
+    def close(self):
+        if self.logger is not None:
+            self.logger.close()
+
+        
+
+
 
 # Function for making vector enviroment
 import gymnasium as gym
