@@ -43,12 +43,9 @@ values = torch.zeros((n_step, n_env))
 # Collect reward to plot
 ep_reward = torch.tensor(n_env)
 
-# TRY NOT TO MODIFY: start the game
 next_obs, _ = envs.reset()
 next_obs = torch.tensor(next_obs)
 next_done = torch.zeros(n_env)
-test_counter = 0
-timer = time()
 
 """
 ------------------------------------------------------------
@@ -128,8 +125,9 @@ for update in range(0, MAX_EPOCH):
 
         # Update using minibatches
         for start in range(0, BATCH_SIZE, MINI_BATCH_SIZE):     
+            
+            # Select the index for minibatch
             end = start + MINI_BATCH_SIZE
-
             mini_batch_index = index[start:end]
 
             _, newlogprob, entropy, newval = agent.get_action_and_value(b_obs[mini_batch_index], b_actions.long()[mini_batch_index])
@@ -148,7 +146,6 @@ for update in range(0, MAX_EPOCH):
 
             # Value loss
             # TODO: add clipped value loss
-
             v_losses = torch.nn.functional.mse_loss(newval.squeeze(), b_returns[mini_batch_index])
             v_loss = v_losses.mean()
 
@@ -157,9 +154,9 @@ for update in range(0, MAX_EPOCH):
 
             # Global loss function
             loss = pg_loss - ENTROPY_COEF*entropy_loss + VALUE_COEFF*v_loss
-
             logger.add_loss(loss.item())
 
+            # Backpropagation
             optimizer.zero_grad()
             loss.backward()
             nn.utils.clip_grad_norm_(agent.parameters(), 0.5)
