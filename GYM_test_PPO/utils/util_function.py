@@ -17,14 +17,14 @@ def make_env(gym_id: str, idx: int, rnd: bool = False) -> gym.spaces:
         return env
     return alias
 
-def test_netwrok(update, agent, test_env, logger, reset_seed :int = 92):
+def test_netwrok(update, agent, test_env, logger):
     """
     Execute a complete run in a test enviroment without exploration
     """
     if update % TEST_INTERVAL:
         stop_test = False
         test_reward = 0
-        test_state, _ = test_env.reset(seed = reset_seed)
+        test_state, _ = test_env.reset()
         
         while not stop_test:
             # Get action with argmax

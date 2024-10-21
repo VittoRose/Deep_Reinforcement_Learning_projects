@@ -11,23 +11,25 @@ from utils.util_function import make_env, test_netwrok
 
 
 # Name the experiment
-name = "seed_01"
-gym_id = "CartPole-v1"
+name = "acrobot_04"
+gym_id = "Acrobot-v1"
 
 # Tensorboard Summary writer
-logger = InfoPlot(gym_id, name, "debug/")
+logger = InfoPlot(gym_id, name, "logs_acrobot/")
 
 # Vector enviroment object, change rnd to true for random seed
-envs = gym.vector.SyncVectorEnv([make_env(gym_id,i, rnd=False) for i in range(n_env)])
+envs = gym.vector.SyncVectorEnv([make_env(gym_id,i, rnd=True) for i in range(n_env)])
 
 # Test enviroment
 test_env = gym.make(gym_id, render_mode="rgb_array")
+
 """
 if name is not None:
     test_env = gym.wrappers.RecordVideo(test_env,
                                         f"videos/{name}",
                                         episode_trigger=lambda x: x % RECORD_VIDEO == 0)
 """
+
 
 # RL agent and optimizer
 agent = Agent(envs)
@@ -44,7 +46,7 @@ values = torch.zeros((n_step, n_env))
 # Collect reward to plot
 ep_reward = torch.tensor(n_env)
 
-next_obs, _ = envs.reset(seed=92)
+next_obs, _ = envs.reset()
 next_obs = torch.tensor(next_obs)
 next_done = torch.zeros(n_env)
 
@@ -54,12 +56,12 @@ next_done = torch.zeros(n_env)
 ------------------------------------------------------------
 """
 
-for update in range(0, MAX_EPOCH):
+for epoch in range(0, MAX_EPOCH):
 
     # Show progress during training
-    logger.show_progress(update)
+    logger.show_progress(epoch)
 
-    test_netwrok(update, agent, test_env, logger)
+    test_netwrok(epoch, agent, test_env, logger)
     
     # Here we can modify the learning rate
 
