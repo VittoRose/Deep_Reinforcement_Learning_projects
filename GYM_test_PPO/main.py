@@ -3,18 +3,19 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
 from ActorCritic import Agent
 from parameters import *
+from utils.run_info import InfoPlot
+from utils.util_function import make_env, test_netwrok
+
 
 # Name the experiment
-name = "tesino2"
-gym_id = "Acrobot-v1"
+name = "seed_01"
+gym_id = "CartPole-v1"
 
 # Tensorboard Summary writer
-logger = Logger(gym_id, name)
-
-# Experiment run with deterministic seed, to use random seed modify also enviroment
-set_seed(rnd=False)
+logger = InfoPlot(gym_id, name, "debug/")
 
 # Vector enviroment object, change rnd to true for random seed
 envs = gym.vector.SyncVectorEnv([make_env(gym_id,i, rnd=False) for i in range(n_env)])
@@ -43,7 +44,7 @@ values = torch.zeros((n_step, n_env))
 # Collect reward to plot
 ep_reward = torch.tensor(n_env)
 
-next_obs, _ = envs.reset()
+next_obs, _ = envs.reset(seed=92)
 next_obs = torch.tensor(next_obs)
 next_done = torch.zeros(n_env)
 
