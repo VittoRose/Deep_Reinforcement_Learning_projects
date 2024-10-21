@@ -1,15 +1,20 @@
 from parameters import *
 
-def create_md_summary(gym_id: str, name: str)-> None:
+def create_md_summary(gym_id: str, name: str, folder: str, seed: float)-> None:
     """
     Function that create a MarkDown report for parameters used during training
     """
-    folder = "logs/"
-    ext = ".md"
-    report = folder + name + ext
+    report = folder + name + ".md"
     
     with open(report, 'w') as file:
         file.write("# Enviroment: " + gym_id + "\n")
+        
+        if int(seed) == SEED:
+            file.write(f"Seed: {seed}, (deterministic)\n")
+        else:
+            file.write(f"Seed: {seed}, (random)\n")
+
+
         file.write("## Training parameters\n")
 
         file.write(f"- Total epoch: {MAX_EPOCH}\n")
@@ -24,7 +29,7 @@ def create_md_summary(gym_id: str, name: str)-> None:
         file.write(f"* GAE lambda: {GAE_LAMBDA}\n")
         file.write(f"* Learning rate: {LR}\n")
         file.write(f"* Clipping factor: {CLIP}\n")
-        file.write(f"* Loss c1 = {VALUE_COEFF} c2 = {ENTROPY_COEF}\n")
+        file.write(f"* Loss: c1 = {VALUE_COEFF}; c2 = {ENTROPY_COEF}\n")
 
 if __name__ == "__main__":
-    create_md_summary("Summary test", " Testissimo")
+    create_md_summary("Summary test", " Testissimo", "")
