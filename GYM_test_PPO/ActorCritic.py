@@ -21,26 +21,37 @@ class Agent(nn.Module):
     def get_value(self, x):
         return self.critic(x)
 
-    def get_action_and_value(self, x, action=None, train: bool=True):
-
+    def get_action_and_value(self, x, action=None):
+        """
+        Get action from actor network:
+            if action == None the action will be sampled from the network probability distribution output
+                return also the probability of the action sampled and entropy distribution
+            if action != None the function will return the probablity of the action used as argument 
+                with the updated actor network, this will also return the entropy of that distribution
+        Get value from critic network: 
+            return the value of the state used as argument  
+        """
         logits = self.actor(x)
-        if train:
-            probs = Categorical(logits=logits)
-            if action is None:
-                action = probs.sample()
+        probs = Categorical(logits=logits)
+        if action is None:
+            action = probs.sample()
 
-            return action, probs.log_prob(action), probs.entropy(), self.critic(x)
-        else:
-            action = torch.argmax(logits)
-            return action
+        return action, probs.log_prob(action), probs.entropy(), self.critic(x)
     
     def get_action_test(self, x) -> int:
+        """
+        Get the action with the maximum probability for testing network
+        The action is not chosen trough sampling a distribution, this correspond to remove the exploration in PPO
+        """
         logits = self.actor(x)
         action = torch.argmax(logits)
 
         return action             
 
 def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
+    """
+    Initialize the layer weight and biases to speed up training
+    """
     torch.nn.init.orthogonal_(layer.weight, std)
     torch.nn.init.constant_(layer.bias, bias_const)
     return layer
