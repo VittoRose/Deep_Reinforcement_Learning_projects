@@ -8,7 +8,7 @@ MAX_EPOCH = 2_000
 # Hyperparameters
 LR = 2.5e-4                     # Optimizer learning rate
 GAMMA = 0.99                     # Discount factor
-GAE_LAMBDA = 0.98                  # TD(lambda) factor: 1 -> 
+GAE_LAMBDA = 0.98               # TD(lambda) factor: 1 -> Monte Carlo; 0 -> TD error
 K_EPOCHS = 4                    # Number of update at the end data collection
 
 CLIP = 0.2                      # Clipping factor in policy loss
@@ -22,7 +22,7 @@ if BATCH_SIZE % K_EPOCHS != 0:
 MINI_BATCH_SIZE = BATCH_SIZE//K_EPOCHS      
 
 # Test parameters
-TEST_INTERVAL = 10
+TEST_INTERVAL = 60
 RECORD_VIDEO = 100
 
 # Seed
