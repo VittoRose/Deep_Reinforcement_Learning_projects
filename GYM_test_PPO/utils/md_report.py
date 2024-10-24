@@ -1,4 +1,5 @@
 from parameters import *
+from time import time
 
 def create_md_summary(gym_id: str, name: str, folder: str, seed: float)-> None:
     """
@@ -33,5 +34,10 @@ def create_md_summary(gym_id: str, name: str, folder: str, seed: float)-> None:
 
         file.write(f"\nClipping loss function: {VALUE_CLIP}")
 
-if __name__ == "__main__":
-    create_md_summary("Summary test", " Testissimo", "")
+def complete_md_summary(folder: str, name: str, starting_time: float) -> None:
+    report = folder + name + ".md"
+    end_time = time()
+    min = (end_time - starting_time)/60
+    sec = (end_time - starting_time)%60
+    with open(report, 'a') as file:
+        file.write(f"\n\nTotal time: {min:.0f} min {sec:.0f} sec")

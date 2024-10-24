@@ -1,6 +1,6 @@
 # Tensorboard log creation
 from torch.utils.tensorboard import SummaryWriter
-from utils.md_report import create_md_summary
+from utils.md_report import create_md_summary, complete_md_summary
 from collections import deque
 from parameters import *
 import gymnasium as gym
@@ -22,7 +22,11 @@ class InfoPlot:
         self.test_index = 0
 
         self.timer = time()
+        self.t0 = time()
         self.buff = deque(maxlen=100)
+
+        self.folder = folder
+        self.name = name
 
         # Handle seed
         seed = self.set_seed(rnd)
@@ -73,6 +77,7 @@ class InfoPlot:
         if self.logger is not None:
             self.logger.flush()
             self.logger.close()
+            complete_md_summary(self.folder, self.name, self.t0)
 
     def show_progress(self, update) -> None: 
         """

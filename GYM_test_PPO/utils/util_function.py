@@ -9,12 +9,6 @@ def make_env(gym_id: str, idx: int, rnd: bool = False) -> gym.spaces:
     def alias():
         # If enviroment need more args add them here
         env = gym.make(gym_id)
-        
-        # Set seed     
-        if not rnd: 
-            env.np_random = SEED + idx
-        else:
-            env.np_random = time() + idx
         return env
     return alias
 
