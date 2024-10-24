@@ -18,7 +18,7 @@ def make_env(gym_id: str, idx: int, rnd: bool = False) -> gym.spaces:
         return env
     return alias
 
-def test_netwrok(update, agent, test_env, logger):
+def test_network(update, agent, test_env, logger):
     """
     Execute 5 complete run in a test enviroment without exploration
     """

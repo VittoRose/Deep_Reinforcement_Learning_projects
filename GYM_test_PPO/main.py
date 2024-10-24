@@ -7,7 +7,7 @@ import torch.optim as optim
 from ActorCritic import Agent
 from parameters import *
 from utils.run_info import InfoPlot
-from utils.util_function import make_env, test_netwrok
+from utils.util_function import make_env, test_network
 
 
 # Name the experiment
@@ -61,7 +61,7 @@ for epoch in range(0, MAX_EPOCH):
     # Show progress during training
     logger.show_progress(epoch)
 
-    test_netwrok(epoch, agent, test_env, logger)
+    test_network(epoch, agent, test_env, logger)
     
     # Here we can modify the learning rate
 
