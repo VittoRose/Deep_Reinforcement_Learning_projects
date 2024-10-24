@@ -14,7 +14,7 @@ K_EPOCHS = 4                    # Number of update at the end data collection
 CLIP = 0.2                      # Clipping factor in policy loss
 ENTROPY_COEF = 0.01             # Entropy coefficent for loss calculation
 VALUE_COEFF = 0.5               # Value coefficent for loss calculation
-POLICY_CLIP = False             # If true -> clip policy loss value
+VALUE_CLIP = False             # If true -> clip policy loss value
 
 if BATCH_SIZE % K_EPOCHS != 0:
     raise ValueError("Batch size and K_epochs are not compatible")

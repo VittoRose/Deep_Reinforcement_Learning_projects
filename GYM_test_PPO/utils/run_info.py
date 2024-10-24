@@ -57,12 +57,13 @@ class InfoPlot:
                 self.logger.add_scalar(tag, loss.item(), self.loss_index)
             self.loss_index += 1
 
-    def add_test(self, reward: int, tag: str = "Test/Reward") -> None:
+    def add_test(self, reward: int, length: int) -> None:
         """
         Add test reward to tensorboard
         """
         if self.logger is not None:
-            self.logger.add_scalar(tag, reward, self.test_index)
+            self.logger.add_scalar("Test/Reward", reward, self.test_index)
+            self.logger.add_scalar("Test/Length", length, self.test_index)
             self.test_index +=1
     
     def close(self):

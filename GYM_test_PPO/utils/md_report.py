@@ -31,5 +31,7 @@ def create_md_summary(gym_id: str, name: str, folder: str, seed: float)-> None:
         file.write(f"* Clipping factor: {CLIP}\n")
         file.write(f"* Loss: c1 = {VALUE_COEFF}; c2 = {ENTROPY_COEF}\n")
 
+        file.write(f"\nClipping loss function: {VALUE_CLIP}")
+
 if __name__ == "__main__":
     create_md_summary("Summary test", " Testissimo", "")

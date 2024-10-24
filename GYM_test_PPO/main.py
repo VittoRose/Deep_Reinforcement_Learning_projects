@@ -148,7 +148,7 @@ for epoch in range(0, MAX_EPOCH):
             policy_loss = torch.max(surr1, surr2).mean()
 
             # Value loss
-            if POLICY_CLIP:
+            if VALUE_CLIP:
                 v_clip = b_values[mini_batch_index] + torch.clamp(newval.squeeze()-b_values[mini_batch_index], 1-CLIP, 1+CLIP)
                 v_losses = torch.nn.functional.mse_loss(newval.squeeze(), b_returns[mini_batch_index])
                 v_loss_max = torch.max(v_clip, v_losses)
