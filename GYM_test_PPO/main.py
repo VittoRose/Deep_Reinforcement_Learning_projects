@@ -11,7 +11,7 @@ from utils.util_function import make_env, test_netwrok
 
 
 # Name the experiment
-name = "acrobot_04"
+name = None
 gym_id = "Acrobot-v1"
 
 # Tensorboard Summary writer
@@ -145,18 +145,23 @@ for epoch in range(0, MAX_EPOCH):
             # Policy loss
             surr1 = -mb_advantages * ratio
             surr2 = -mb_advantages * torch.clamp(ratio, 1-CLIP, 1+CLIP)
-            pg_loss = torch.max(surr1, surr2).mean()
+            policy_loss = torch.max(surr1, surr2).mean()
 
             # Value loss
-            # TODO: add clipped value loss
-            v_losses = torch.nn.functional.mse_loss(newval.squeeze(), b_returns[mini_batch_index])
-            v_loss = v_losses.mean()
+            if POLICY_CLIP:
+                v_clip = b_values[mini_batch_index] + torch.clamp(newval.squeeze()-b_values[mini_batch_index], 1-CLIP, 1+CLIP)
+                v_losses = torch.nn.functional.mse_loss(newval.squeeze(), b_returns[mini_batch_index])
+                v_loss_max = torch.max(v_clip, v_losses)
+                v_loss = 0.5*v_loss_max.mean()
+            else:
+                v_losses = torch.nn.functional.mse_loss(newval.squeeze(), b_returns[mini_batch_index])
+                v_loss = v_losses.mean()
 
             # Entropy loss
             entropy_loss = entropy.mean()
 
             # Global loss function
-            loss = pg_loss - ENTROPY_COEF*entropy_loss + VALUE_COEFF*v_loss
+            loss = policy_loss - ENTROPY_COEF*entropy_loss + VALUE_COEFF*v_loss
             logger.add_loss(loss.item())
 
             # Backpropagation
