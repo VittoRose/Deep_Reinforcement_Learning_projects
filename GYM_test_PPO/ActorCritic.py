@@ -3,6 +3,9 @@ import torch.nn as nn
 from torch.distributions.categorical import Categorical
 import numpy as np
 
+neurons = 256
+activation_fn = nn.ReLU()
+
 class Agent(nn.Module):
     """
     Create a ActorCritic agent 
@@ -13,9 +16,7 @@ class Agent(nn.Module):
 
         super(Agent, self).__init__()
 
-        # Using Tanh as activation function as suggested in various implementation
-        self.critic = make_critic(envs, init_layer)
-        
+        self.critic = make_critic(envs, init_layer)        
         self.actor = make_actor(envs, init_layer)
 
     def get_value(self, x):
@@ -62,19 +63,19 @@ def make_critic(envs, init_layer) -> torch.nn:
     """
     if init_layer:
         critic = nn.Sequential(
-            layer_init(nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, 1), std=1.0),
+            layer_init(nn.Linear(np.array(envs.single_observation_space.shape).prod(), neurons)),
+            activation_fn,
+            layer_init(nn.Linear(neurons, neurons)),
+            activation_fn,
+            layer_init(nn.Linear(neurons, 1), std=1.0),
             )
     else:
         critic = nn.Sequential(
-            nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64),
-            nn.Tanh(),
-            nn.Linear(64, 64),
-            nn.Tanh(),
-            nn.Linear(64, 1),
+            nn.Linear(np.array(envs.single_observation_space.shape).prod(), neurons),
+            activation_fn,
+            nn.Linear(neurons, neurons),
+            activation_fn,
+            nn.Linear(neurons, 1),
             )
     return critic
 
@@ -86,19 +87,19 @@ def make_actor(envs, init_layer) -> torch.nn:
 
     if init_layer:
         actor = nn.Sequential(
-            layer_init(nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, envs.single_action_space.n), std=0.01),
+            layer_init(nn.Linear(np.array(envs.single_observation_space.shape).prod(), neurons)),
+            activation_fn,
+            layer_init(nn.Linear(neurons, neurons)),
+            activation_fn,
+            layer_init(nn.Linear(neurons, envs.single_action_space.n), std=0.01),
         )
     else:
         actor = nn.Sequential(
-            nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64),
-            nn.Tanh(),
-            nn.Linear(64, 64),
-            nn.Tanh(),
-            nn.Linear(64, envs.single_action_space.n)
+            nn.Linear(np.array(envs.single_observation_space.shape).prod(), neurons),
+            activation_fn,
+            nn.Linear(neurons, neurons),
+            activation_fn,
+            nn.Linear(neurons, envs.single_action_space.n)
         )
     return actor
 
