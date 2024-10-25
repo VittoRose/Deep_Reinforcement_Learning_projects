@@ -35,23 +35,23 @@ if name is not None:
 
 
 # RL agent and optimizer
-agent = Agent(envs)
+agent = Agent(envs).to(device)
 optimizer = optim.Adam(agent.parameters(), lr=LR, eps=1e-5)
 
 # Buffer preallocation
-obs = torch.zeros((n_step, n_env) + envs.single_observation_space.shape)
-actions = torch.zeros((n_step, n_env) + envs.single_action_space.shape)
-logprobs = torch.zeros((n_step, n_env))
-rewards = torch.zeros((n_step, n_env))
-dones = torch.zeros((n_step, n_env))
-values = torch.zeros((n_step, n_env))
+obs = torch.zeros((n_step, n_env) + envs.single_observation_space.shape).to(device)
+actions = torch.zeros((n_step, n_env) + envs.single_action_space.shape).to(device)
+logprobs = torch.zeros((n_step, n_env)).to(device)
+rewards = torch.zeros((n_step, n_env)).to(device)
+dones = torch.zeros((n_step, n_env)).to(device)
+values = torch.zeros((n_step, n_env)).to(device)
 
 # Collect reward to plot
 ep_reward = torch.tensor(n_env)
 
 next_obs, _ = envs.reset()
-next_obs = torch.tensor(next_obs)
-next_done = torch.zeros(n_env)
+next_obs = torch.tensor(next_obs).to(device)
+next_done = torch.zeros(n_env).to(device)
 
 """
 ------------------------------------------------------------
@@ -83,11 +83,11 @@ try:
             logprobs[step] = logprob
 
             # Execute action in enviroment
-            next_obs, reward, truncated, terminated, _ = envs.step(action.numpy())
+            next_obs, reward, truncated, terminated, _ = envs.step(action.cpu().numpy())
             done = terminated | truncated
 
-            rewards[step] = torch.tensor(reward)
-            next_obs, next_done = torch.tensor(next_obs), torch.tensor(done)
+            rewards[step] = torch.tensor(reward).to(device)
+            next_obs, next_done = torch.tensor(next_obs).to(device), torch.tensor(done).to(device)
 
             # Collect rewards per episode
             with torch.no_grad():
@@ -101,7 +101,7 @@ try:
         # bootstrap value if not done
         with torch.no_grad():
             next_value = agent.get_value(next_obs).reshape(1, -1)
-            advantages = torch.zeros_like(rewards)
+            advantages = torch.zeros_like(rewards).to(device)
             lastgaelam = 0
             for t in reversed(range(n_step)):
                 if t == n_step- 1:
