@@ -1,26 +1,28 @@
 from parameters import *
+from ActorCritic import neurons, activation_fn, hidden_layer
 from time import time
 
-def create_md_summary(gym_id: str, name: str, folder: str, seed: float)-> None:
+def create_md_summary(gym_id: str, name: str, folder: str, seed: float, device: str)-> None:
     """
     Function that create a MarkDown report for parameters used during training
     """
     report = folder + name + ".md"
     
     with open(report, 'w') as file:
-        file.write("# Enviroment: " + gym_id + "\n")
+        file.write("# Enviroment: " + gym_id + "\n\n")
         
+        file.write("Executed on " + device)
         if int(seed) == SEED:
             file.write(f"Seed: {seed}, (deterministic)\n")
         else:
             file.write(f"Seed: {seed}, (random)\n")
-
 
         file.write("## Training parameters\n")
 
         file.write(f"- Total epoch: {MAX_EPOCH}\n")
         file.write(f"- Number of enviroments: {n_env}\n")
         file.write(f"- Timestep for collecting data T = {n_step}\n")
+        file.write(f"- Epoch for test: {TEST_INTERVAL} with {TEST_RESET} tests each time\n")
         file.write(f"- Total data for each loop: {BATCH_SIZE}\n")
         file.write(f"- Update epoch K = {K_EPOCHS}\n")
         file.write(f"- Minibatch size {MINI_BATCH_SIZE}\n\n")
@@ -32,7 +34,12 @@ def create_md_summary(gym_id: str, name: str, folder: str, seed: float)-> None:
         file.write(f"* Clipping factor: {CLIP}\n")
         file.write(f"* Loss: c1 = {VALUE_COEFF}; c2 = {ENTROPY_COEF}\n")
 
-        file.write(f"\nClipping loss function: {VALUE_CLIP}")
+        file.write(f"\nClipping loss function: {VALUE_CLIP}\n")
+
+        file.wirte(f"## Network\n")
+        file.write(f"Number of neurons for hidden layer: {neurons}")
+        file.write(f"Activation function: {activation_fn}")
+        file.write(f"Number of hidden layer: {hidden_layer}")
 
 def complete_md_summary(folder: str, name: str, starting_time: float) -> None:
     report = folder + name + ".md"

@@ -14,15 +14,15 @@ def make_env(gym_id: str, idx: int, rnd: bool = False) -> gym.spaces:
 
 def test_network(update, agent, test_env, logger):
     """
-    Execute 3 complete run in a test enviroment without exploration
+    Execute n complete run in a test enviroment without exploration
     """
     if update % TEST_INTERVAL:
         
-        rew_data = np.zeros(3)
-        len_data = np.zeros(3)
+        rew_data = np.zeros(TEST_RESET)
+        len_data = np.zeros(TEST_RESET)
         
         # Collect data for 3 episode of test and log the mean reward and ep_lenght
-        for i in range(3):
+        for i in range(TEST_RESET):
             stop_test = False
             test_reward = 0
             test_state, _ = test_env.reset()

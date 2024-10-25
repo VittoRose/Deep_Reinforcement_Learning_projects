@@ -3,7 +3,6 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.md_report import create_md_summary, complete_md_summary
 from collections import deque
 from parameters import *
-import gymnasium as gym
 import torch
 import numpy as np
 import random
@@ -13,10 +12,10 @@ class InfoPlot:
     """
     Class that contain the tensorboard logger and the progress bar shown during training
     """
-    def __init__(self, gym_id: str,name: str, folder: str = "logs/", rnd: bool=False) -> SummaryWriter:
+    def __init__(self, gym_id: str,name: str, device: str, folder: str = "logs/", rnd: bool=False) -> SummaryWriter:
         
         print(f"Experiment name: {name}")
-
+        print("Running on " + device)
         self.loss_index = 0
         self.train_index = 0
         self.test_index = 0
@@ -37,7 +36,7 @@ class InfoPlot:
             # Create tensorboard logger
             self.logger = SummaryWriter(folder + name)
             # Create a md file for hyperparam
-            create_md_summary(gym_id, name, folder, seed=seed)
+            create_md_summary(gym_id, name, folder, seed, device)
 
         else:
             self.logger = None

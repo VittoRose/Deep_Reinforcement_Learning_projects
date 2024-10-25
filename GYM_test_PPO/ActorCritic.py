@@ -3,8 +3,10 @@ import torch.nn as nn
 from torch.distributions.categorical import Categorical
 import numpy as np
 
+# Change network structure here
 neurons = 256
 activation_fn = nn.ReLU()
+hidden_layer = 2        # This is only for report.md, to change number of hidden layer act manually
 
 class Agent(nn.Module):
     """

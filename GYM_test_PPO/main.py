@@ -9,13 +9,16 @@ from parameters import *
 from utils.run_info import InfoPlot
 from utils.util_function import make_env, test_network
 
-
 # Name the experiment
-name = None
+name = "debug"
 gym_id = "Acrobot-v1"
 
+# Select cuda if abailable
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device_name = "cuda" if torch.cuda.is_available() else "cpu"
+
 # Tensorboard Summary writer
-logger = InfoPlot(gym_id, name, "logs_acrobot/")
+logger = InfoPlot(gym_id, name, device_name, "logs_acrobot/")
 
 # Vector enviroment object, change rnd to true for random seed
 envs = gym.vector.SyncVectorEnv([make_env(gym_id,i, rnd=True) for i in range(n_env)])
