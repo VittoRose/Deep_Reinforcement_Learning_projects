@@ -8,6 +8,7 @@ import torch.optim as optim
 from ActorCritic import Agent
 from parameters import *
 from utils.run_info import InfoPlot
+from utils.util_function import test_network
 
 # Tensorboard Summary writer
 logger = make_logger("prova_bellissima2")
@@ -52,6 +53,8 @@ if __name__ == "__main__":
 
         # Here we can modify the learning rate
         logge1.show_progress(update)
+        test_network(update, agent, test_env, logge1)
+        
         # Collect data from the enviroment
         for step in range(0, n_step):
             global_step += 1*n_env
@@ -151,30 +154,6 @@ if __name__ == "__main__":
                 # TODO: be sure about clipping gradient norm
                 nn.utils.clip_grad_norm_(agent.parameters(), 0.5)
                 optimizer.step()
-
-                test_counter += 1
-
-            if test_counter % TEST_INTERVAL == 0:
-                stop_test = False
-                test_reward = 0
-                test_state, _ = test_env.reset()
-
-                while not stop_test:
-                    # Get action with argmax
-                    with torch.no_grad():
-                        test_state_tensor = torch.tensor(test_state)
-                        test_action = agent.get_action_test(test_state_tensor)
-
-                    ns, rw, ter, trun, _ = test_env.step(test_action.numpy())
-                    test_reward += rw
-                    test_state = ns
-
-                    if ter or trun:
-                        if logger is not None:
-                            logger.add_scalar("Test/Reward", test_reward, test_place)
-                            test_reward = 0
-                            test_place += 1
-                        stop_test = True
 
     test_env.close()                
 

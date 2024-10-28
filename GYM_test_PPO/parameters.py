@@ -23,7 +23,7 @@ SEED = 0
 
 # Test parameters
 TEST_INTERVAL = 10
-TEST_RESET = 1
+TEST_RESET = 3
 
 """
 -----------------------------------------------------------------------
