@@ -3,6 +3,10 @@ import torch.nn as nn
 from torch.distributions.categorical import Categorical
 import numpy as np
 
+neurons = 64
+activation_fn = nn.Tanh()
+hidden_layer = 2
+
 class Agent(nn.Module):
     """
     Create a ActorCritic agent 

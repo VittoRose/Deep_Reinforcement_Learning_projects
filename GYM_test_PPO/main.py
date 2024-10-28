@@ -7,10 +7,11 @@ import torch.nn as nn
 import torch.optim as optim
 from ActorCritic import Agent
 from parameters import *
+from utils.run_info import InfoPlot
 
 # Tensorboard Summary writer
-logger = make_logger(None)
-
+logger = make_logger("prova_bellissima2")
+logge1 = InfoPlot("Cartpole-v1", None, "cpu")
 # Aggiungere seed, test enviroment, cuda, misura della velocità, Test su altri ambienti
 
 def make_env():
@@ -50,7 +51,7 @@ if __name__ == "__main__":
     for update in range(1, num_updates + 1):
 
         # Here we can modify the learning rate
-
+        logge1.show_progress(update)
         # Collect data from the enviroment
         for step in range(0, n_step):
             global_step += 1*n_env

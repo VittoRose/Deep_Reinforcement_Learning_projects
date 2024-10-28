@@ -1,9 +1,10 @@
 
 # Training parameters
-n_env = 4
-n_step = 128                    # Number of step in the enviroment between each update
+n_env = 8
+n_step = 64                    # Number of step in the enviroment between each update
 BATCH_SIZE = n_env*n_step       # Data collected for each update
 MAX_ITERATION = 1_000_000
+MAX_EPOCH = 50
 
 # Hyperparameters
 LR = 2.5e-4                     # Optimizer learning rate
@@ -14,11 +15,15 @@ K_EPOCHS = 4                    # Number of update at the end data collection
 CLIP = 0.2                      # Clipping factor in policy loss
 ENTROPY_COEF = 0.01             # Entropy coefficent for loss calculation
 VALUE_COEFF = 0.5               # Value coefficent for loss calculation
+VALUE_CLIP = False
 
 MINI_BATCH_SIZE = BATCH_SIZE//K_EPOCHS      # Be careful here
 
+SEED = 0
+
 # Test parameters
 TEST_INTERVAL = 10
+TEST_RESET = 1
 
 """
 -----------------------------------------------------------------------
@@ -30,7 +35,7 @@ TEST_INTERVAL = 10
 from torch.utils.tensorboard import SummaryWriter
 def make_logger(name: str) -> SummaryWriter:
     if name is not None:
-        logger = SummaryWriter("logs/" + name)
+        logger = SummaryWriter("logs_2/" + name)
     else:
         logger = None
     print(f"Tensorboard logger: {name}")
