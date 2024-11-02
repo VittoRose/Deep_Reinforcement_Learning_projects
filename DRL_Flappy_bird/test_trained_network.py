@@ -1,12 +1,12 @@
 import DNQ
-import Enviroment
+import DRL_Flappy_bird.Environment as Environment
 from time import time
 import random
 import Jumping_bird as jb
 import torch
 
 random.seed(time())
-env = Enviroment.FlappyBird()
+env = Environment.FlappyBird()
 screen = jb.Graphics()
 
 # Load old network

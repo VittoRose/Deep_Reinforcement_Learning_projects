@@ -1,5 +1,5 @@
 import DNQ
-import Enviroment
+import DRL_Flappy_bird.Environment as Environment
 from parameters import *
 import torch
 import Jumping_bird as jb
@@ -14,8 +14,8 @@ logger = SummaryWriter("logs/Buffer100k_Batch128_pc_lab")
 # Get a random seed
 random.seed(time())
 
-# Create a test enviroment
-test_env = Enviroment.FlappyBird()
+# Create a test enviromnent
+test_env = Environment.FlappyBird()
 
 # Create a object to display test data
 screen = jb.Graphics()
@@ -30,9 +30,9 @@ RL_agent = DNQ.Agent(test_env.state_size, test_env.action_size)
 policy = DNQ.Policy(RL_agent, torch.optim.Adam(RL_agent.parameters(), lr=LR), buffer, DISCOUNT_FACTOR, EPS, logger, UPDATE_INTERVAL )
 
 # Pool of train events
-train_env = Enviroment.VectorEnv([Enviroment.FlappyBird() for _ in range(N_ENV)])
+train_env = Environment.VectorEnv([Environment.FlappyBird() for _ in range(N_ENV)])
 
-# Collector for training enviroment
+# Collector for training environment
 train_collector = Data_struct.Collector(policy, train_env, buffer, test_env.action_size, logger)
 
 # Fill the buffer with data
@@ -78,14 +78,14 @@ try:
         # Select the action
         action = torch.argmax(q_test)
 
-        # Perform a step in the enviroment
+        # Perform a step in the environment
         state, reward, terminated, truncated =  test_env.step(action)
         
         # Logger variable
         ep_reward += reward
         ep_lenght += 1
 
-        # Reset enviroment
+        # Reset environment
         if terminated or truncated:
             state = test_env.reset()
 

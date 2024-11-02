@@ -5,7 +5,7 @@ from parameters import *
 
 class PendolumEnv:
     """
-    Enviroment for DRL problem
+    environment for DRL problem
     """
 
     def __init__(self, l=1, m=1, g=9.81, dt=1/60):
@@ -22,7 +22,7 @@ class PendolumEnv:
 
     def reset(self) -> torch.tensor:
         """
-        Reset the enviroment with random initial condition
+        Reset the environment with random initial condition
         """
         
         self.theta = random.uniform(-np.pi/2+0.2, np.pi/2-0.2)
@@ -38,13 +38,13 @@ class PendolumEnv:
     @property
     def ang(self):
         """
-        Function that return the current angle in the enviroment
+        Function that return the current angle in the environment
         """
         return self.theta
     
     def step(self, action : int) -> tuple[torch.tensor, int, bool, bool]:
         """
-        Perform a given action to the enviroment
+        Perform a given action to the environment
         """
 
         # Init variable
@@ -94,7 +94,7 @@ class PendolumEnv:
     
     def get_state(self) -> torch.tensor:
         """
-        Return the enviroment state as 4 number between 0 and 1, as a tensor type
+        Return the environment state as 4 number between 0 and 1, as a tensor type
         """
         
         # Get sign of angle and velocity
@@ -150,7 +150,7 @@ class EnvWorker:
 
 class VectorEnv():
     """
-    Pool of enviroment
+    Pool of environment
     """
     def __init__(self, env: list):
 

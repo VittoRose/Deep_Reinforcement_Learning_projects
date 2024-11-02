@@ -38,10 +38,10 @@ gym_id = "MountainCar-v0"
 # Tensorboard Summary writer
 logger = InfoPlot(gym_id, name)
 
-# Vector enviroment object, change rnd to true for random seed
+# Vector environment object, change rnd to true for random seed
 envs = gym.vector.SyncVectorEnv([make_env(gym_id,i, rnd=False) for i in range(n_env)])
 
-# Test enviroment
+# Test environment
 test_env = gym.make(gym_id, render_mode="rgb_array")
 
 """
@@ -86,7 +86,7 @@ for epoch in range(0, MAX_EPOCH):
     
     # Here we can modify the learning rate
 
-    # Collect data from the enviroment
+    # Collect data from the environment
     for step in range(0, n_step):
 
         obs[step] = next_obs
@@ -99,7 +99,7 @@ for epoch in range(0, MAX_EPOCH):
         actions[step] = action
         logprobs[step] = logprob
 
-        # Execute action in enviroment
+        # Execute action in environment
         next_obs, rew1, truncated, terminated, _ = envs.step(action.numpy())
         done = terminated | truncated
 

@@ -1,6 +1,6 @@
 import Data_struct
 import DNQ
-import Enviroment
+import Environment
 import Graphics
 import torch
 from parameters import *
@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 from time import time
 
 
-# Enviroment param
+# environment param
 n_env = 5
 epidosde = 8
 state_size = 4
@@ -29,15 +29,15 @@ gui = Graphics.GUI()
 gui.GUI_init(time())
 
 
-test_env = Enviroment.PendolumEnv()
+test_env = environment.PendolumEnv()
 
 # Create a policy
 policy = DNQ.Policy(RL_agent, torch.optim.Adam(RL_agent.parameters(), lr=LR), buffer, DISCOUNT_FACTOR, EPS, logger, UPDATE_INTERVAL )
 
 # Pool of train events
-train_env = Enviroment.VectorEnv([Enviroment.PendolumEnv() for _ in range(n_env)])
+train_env = environment.VectorEnv([environment.PendolumEnv() for _ in range(n_env)])
 
-# Collector for training enviroment
+# Collector for training environment
 train_collector = Data_struct.Collector(policy, train_env, buffer, action_size, logger)
 
 # Fill the buffer with data
@@ -77,14 +77,14 @@ try:
         # Select the action
         action = torch.argmax(q_test)
 
-        # Perform a step in the enviroment
+        # Perform a step in the environment
         state, reward, terminated, truncated =  test_env.step(action)
         ep_reward += reward
 
         # Update the angle 
         ang = test_env.ang
 
-        # Reset enviroment if the 
+        # Reset environment if the 
         if terminated or truncated:
             state = test_env.reset()
 

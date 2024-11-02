@@ -6,10 +6,10 @@ class DictBuffer():
     def __init__(self, state_size, n_envs, capacity=BUFFER_SIZE, batch_size=BATCH_SIZE) -> None:
         """
         Param:
-        - observation size -> enviroment state dimension
+        - observation size -> environment state dimension
         - n_envs -> number of evniroment currently working
         """
-        # Param from enviroment
+        # Param from environment
         self.state_size = state_size
         self.n_env = n_envs
 
@@ -28,7 +28,7 @@ class DictBuffer():
         Preallocation for buffer
         """
         
-        # Create a list to store lenght and reward of each enviroment 
+        # Create a list to store lenght and reward of each environment 
         #self.episode_rews = [0 for _ in range(self.n_envs)]
         #self.episode_lens = [0 for _ in range(self.n_envs)]
 
@@ -49,7 +49,7 @@ class DictBuffer():
         Store data in the buffer
         """
 
-        # List that contain cumulative rewards and episode lenght for each enviroment
+        # List that contain cumulative rewards and episode lenght for each environment
         rewards = []
         ep_length = []
 
@@ -77,7 +77,7 @@ class DictBuffer():
                 rewards.append(self.rew[j])
                 ep_length.append(self.ep_len[j])
 
-                # Clear enviroment reward and length
+                # Clear environment reward and length
                 self.rew[j], self.ep_len[j] = 0,0
             
         # Update index, if capacity exeeded clear old transition
@@ -132,11 +132,11 @@ class DictBuffer():
 class Collector: 
     def __init__(self, policy, env, buffer, action_size, logger=None, exploration : bool = True ):
         """
-        Collector initiazlizer: allow the interaction between agent and multiple enviroment
-        The data collected from the enviroments are stored in the ReplayBuffer
+        Collector initiazlizer: allow the interaction between agent and multiple environment
+        The data collected from the environments are stored in the ReplayBuffer
         """
 
-        # Vector enviroment object
+        # Vector environment object
         self.env = env
 
         # Hyperparameters
@@ -154,19 +154,19 @@ class Collector:
         # Nubmer of reset
         self.reset_num = 0
 
-        # Initialize the enviroment
+        # Initialize the environment
         self.reset()
 
     def reset(self):
         """
-        Reset the enviroment and store the first state in the auxiliary buffer
+        Reset the environment and store the first state in the auxiliary buffer
         """
 
         self.state = self.env.reset()
 
     def collect(self, n_res : int = None , n_exp : int = None  ):
         """
-        Collect transitions from the interaction policy-enviroment and store in the buffer
+        Collect transitions from the interaction policy-environment and store in the buffer
         :param n_ep: number of episodes to collect (an episode is counted if terminated or truncated is true)
         """
 
@@ -189,7 +189,7 @@ class Collector:
                 if random_sample < self.policy.eps:
                     actions = np.random.choice(range(self.action_size), len(actions))
 
-            # Perform a step in all enviroment
+            # Perform a step in all environment
             next_state, reward, terminated, truncated = self.env.step(actions)
 
             # Add data in replay buffer
@@ -204,11 +204,11 @@ class Collector:
                     for index,j in enumerate(ep_length):
                         self.writer.add_scalar("Train/Episode length", j, self.reset_num + index)
 
-                # Count the number of enviroment reset, total and partial
+                # Count the number of environment reset, total and partial
                 self.reset_num += len(to_reset)
                 count_res += len(to_reset)
 
-                # Reset the enviroment terminated or truncated
+                # Reset the environment terminated or truncated
                 self.state[to_reset] = self.env.reset(to_reset)
 
 

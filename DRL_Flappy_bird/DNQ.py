@@ -128,7 +128,7 @@ class Policy():
         self.step += 1
 
 
-def test_network(NN, enviroment, logger, state, reset):
+def test_network(NN, environment, logger, state, reset):
 
     # Get q_value from the target network
     q_test = NN(state)
@@ -136,16 +136,16 @@ def test_network(NN, enviroment, logger, state, reset):
     # Select the action
     action = torch.argmax(q_test)
 
-    # Perform a step in the enviroment
-    state, reward, terminated, truncated =  enviroment.step(action)
+    # Perform a step in the environment
+    state, reward, terminated, truncated =  environment.step(action)
     ep_reward += reward
 
     # Update the angle 
-    ang = enviroment.ang
+    ang = environment.ang
 
-    # Reset enviroment if the 
+    # Reset environment if the 
     if terminated or truncated:
-        state = enviroment.reset()
+        state = environment.reset()
 
         if logger is not None:
             logger.add_scalar("Test/reward", reward, reset)

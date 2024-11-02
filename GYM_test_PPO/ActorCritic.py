@@ -11,7 +11,7 @@ hidden_layer = 2        # This is only for report.md, to change number of hidden
 class Agent(nn.Module):
     """
     Create a ActorCritic agent 
-    :param envs: Gymnasium SyncVectorEnv, training enviroment
+    :param envs: Gymnasium SyncVectorEnv, training environment
     :param init_layer: flag for initializing with weight and biases defined in layer_init
     """
     def __init__(self, envs, init_layer: bool = True):
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     def make_env():
         return gym.make("CartPole-v1")
 
-    # Vector enviroment object
+    # Vector environment object
     env = gym.vector.SyncVectorEnv([make_env for _ in range(1)])
     state, _ = env.reset()
 
